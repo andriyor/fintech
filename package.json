@@ -1,0 +1,31 @@
+{
+  "name": "fintech",
+  "version": "1.0.0",
+  "description": "<img src=\"basic.svg\">",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andriyor/fintech.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/andriyor/fintech/issues"
+  },
+  "homepage": "https://github.com/andriyor/fintech#readme",
+  "dependencies": {
+    "glob": "^11.0.1",
+    "lodash": "^4.17.21",
+    "playwright": "^1.50.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.17.15",
+    "@types/node": "^22.12.0"
+  }
+}

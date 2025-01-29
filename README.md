@@ -10,7 +10,7 @@ A payment processor is a company that handles transactions between merchants, ac
 
 A payment processor is the middleman that securely moves transaction data between the merchant, acquiring bank, card networks, and issuing bank.
 
-The payment processor is responsible for: 
+The payment processor is responsible for:
 
 - Transmitting transaction data between the merchant, acquiring bank, and card network
 - Encrypting sensitive payment information to prevent fraud
@@ -29,3 +29,5 @@ A refund is when a merchant voluntarily returns the transaction amount to the cu
 A chargeback is when a customer files a dispute with their issuing bank, asking them to forcibly reverse the transaction.
 Merchants should prioritize refunds to avoid chargebacks whenever possible.
 
+
+**Gross Payments**
