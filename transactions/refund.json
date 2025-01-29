@@ -1,4 +1,5 @@
 {
   "amount": 100,
-  "status": "REFUNDED"
+  "status": "REFUNDED",
+  "source": "POS"
 }

@@ -1,4 +1,5 @@
 {
   "amount": 200,
-  "status": "AUTHORIZED"
+  "status": "AUTHORIZED",
+  "source": "POS"
 }

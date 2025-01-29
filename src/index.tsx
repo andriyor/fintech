@@ -8,6 +8,22 @@ import React from "react";
 
 import App from "./App";
 
+const amountByStatus = (transactions: []) => {
+  const byStatus = groupBy(transactions, "status");
+  return Object.entries(byStatus).reduce((prev, [key, val]) => {
+    prev[key] = sumBy(val, "amount");
+    return prev;
+  }, {});
+};
+
+const amountBySource = (transactions: []) => {
+  const byStatus = groupBy(transactions, "source");
+  return Object.entries(byStatus).reduce((prev, [key, val]) => {
+    prev[key] = sumBy(val, "amount");
+    return prev;
+  }, {});
+};
+
 (async () => {
   const files = await glob("transactions/*.json");
   console.log("files", files);
@@ -17,17 +33,16 @@ import App from "./App";
   });
   console.log("transactions", transactions);
 
-  const byStatus = groupBy(transactions, "status");
-  console.log("byStatus", byStatus);
-  const agrigaterResult = Object.entries(byStatus).reduce((prev, [key, val]) => {
-    prev[key] = sumBy(val, 'amount')
-    return prev;
-  }, {})
+  const byStatus = amountByStatus(transactions);
+  const bySource = amountBySource(transactions);
+  console.log('bySource', bySource)
 
   const browser = await chromium.launch({ headless: false });
   const page = await browser.newPage();
 
-  const htmlContent = renderToString(<App byStatus={agrigaterResult} />);
+  const htmlContent = renderToString(
+    <App byStatus={byStatus} bySource={bySource} />
+  );
 
   await page.setContent(htmlContent);
 
