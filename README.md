@@ -29,10 +29,13 @@ A refund is when a merchant voluntarily returns the transaction amount to the cu
 A chargeback is when a customer files a dispute with their issuing bank, asking them to forcibly reverse the transaction.
 Merchants should prioritize refunds to avoid chargebacks whenever possible.
 
-
 **Gross Payments**
 
 Gross Income/Revenue: The total amount of money earned before deductions like taxes, expenses, or costs.
+
+**Net Payment**
+
+Amount of money an individual or entity receives after all deductions, such as taxes, fees, and other withholdings, have been subtracted from the total (gross) amount.
 
 ### Resources
 

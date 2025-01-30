@@ -5,6 +5,7 @@ import { Source, Status } from "./types";
 type Resutl = {
   byStatus: Record<Status, number>;
   bySource: Record<Source, number>;
+  totalTip: number;
 };
 
 export default function App(props: { result: Resutl }) {
@@ -16,7 +17,8 @@ export default function App(props: { result: Resutl }) {
         <div>Authorized: {props.result.byStatus.AUTHORIZED}</div>
         <div>Pending: {props.result.byStatus.PENDING}</div>
       </div>
-      <div>
+
+      <div style={{ marginBottom: "12px" }}>
         <div>By source:</div>
         {Object.entries(props.result.bySource).map(([key, val]) => {
           return (
@@ -25,6 +27,10 @@ export default function App(props: { result: Resutl }) {
             </div>
           );
         })}
+      </div>
+
+      <div style={{ marginBottom: "12px" }}>
+        Total tip: {props.result.totalTip}
       </div>
     </div>
   );
