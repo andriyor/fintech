@@ -34,3 +34,8 @@ Merchants should prioritize refunds to avoid chargebacks whenever possible.
 
 Gross Income/Revenue: The total amount of money earned before deductions like taxes, expenses, or costs.
 
+### Resources
+
+[Interchange in 1,000 words - Matt Brown's Notes](https://notes.mtb.xyz/p/interchange-in-1000-words)
+
+[Payfac in 1,000 words - Matt Brown's Notes](https://notes.mtb.xyz/p/payfac-1000-words)
