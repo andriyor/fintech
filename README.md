@@ -31,3 +31,6 @@ Merchants should prioritize refunds to avoid chargebacks whenever possible.
 
 
 **Gross Payments**
+
+Gross Income/Revenue: The total amount of money earned before deductions like taxes, expenses, or costs.
+

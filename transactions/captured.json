@@ -1,5 +1,9 @@
 {
-  "amount": 100,
+  "amounts": {
+    "transaction": 100,
+    "tip": 0,
+    "order": 100
+  },
   "status": "CAPTURED",
   "source": "ECOMMERCE"
 }

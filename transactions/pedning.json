@@ -1,5 +1,9 @@
 {
-  "amount": 300,
+  "amounts": {
+    "transaction": 310,
+    "tip": 10,
+    "order": 300
+  },
   "status": "PENDING",
   "source": "ACH"
 }

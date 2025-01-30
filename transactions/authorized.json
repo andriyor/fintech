@@ -1,5 +1,9 @@
 {
-  "amount": 200,
+  "amounts": {
+    "transaction": 210,
+    "tip": 10,
+    "order": 200
+  },
   "status": "AUTHORIZED",
   "source": "POS"
 }
