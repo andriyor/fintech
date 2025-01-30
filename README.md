@@ -1,4 +1,4 @@
-# Fintech my understanding
+# Fintech basic
 
 <img src="basic.svg">
 
