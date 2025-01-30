@@ -1,4 +1,4 @@
-import { Transaction } from "./types";
+import { Transaction } from "../types";
 
 const amountByStatus = (transactions: Transaction[]) => {
   return transactions.reduce((acc, curr) => {

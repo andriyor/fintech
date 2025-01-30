@@ -8,7 +8,7 @@ import React from "react";
 import App from "./App";
 import { Transaction } from "./types";
 // import { aggregate } from "./multi-pass";
-import { aggregate } from "./single-pass";
+import { aggregate } from "./utils/single-pass";
 
 
 (async () => {
