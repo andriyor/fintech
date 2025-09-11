@@ -42,3 +42,6 @@ Amount of money an individual or entity receives after all deductions, such as t
 [Interchange in 1,000 words - Matt Brown's Notes](https://notes.mtb.xyz/p/interchange-in-1000-words)
 
 [Payfac in 1,000 words - Matt Brown's Notes](https://notes.mtb.xyz/p/payfac-1000-words)
+
+
+![My figure](Untitled-1.excalidraw.png)
