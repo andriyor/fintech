@@ -65,7 +65,8 @@ pnpm build   # static site in dist/
 - **Vite + React, no router or UI kit.** Tabs are switched by URL hash (`#settlement`); styling is one CSS file
   with light/dark tokens. The app is a teaching tool, so fewer moving parts beat flexibility.
 - **One folder per tab.** Each of `ui/lifecycle`, `settlement`, `payouts`, `chargebacks`, `ledger` holds its
-  model, tests and components; `ui/shared` holds what several tabs use (`Actors`, `Toggle`, `money`).
+  model, tests and components; `ui/terms` is the glossary; `ui/shared` holds what several tabs use (`Actors`,
+  `Toggle`, `MachineDiagram`, `money`, icons).
 - **Logic in plain `.ts` models, UI in components.** Models have no React code, so they are tested without a
   DOM and stay readable as the "rules" of each concept.
 - **Vitest for invariant tests.** Each `model.test.ts` asserts what makes the explanation true: money is
@@ -79,10 +80,20 @@ pnpm build   # static site in dist/
   tests walk every reachable path and fail on an unreachable status, a dead end that isn't final, or
   money created or lost. Trade-offs: ~14 KB gzipped, some typing ceremony, and terminal states are tagged
   `final` rather than `type: "final"` so the actor keeps running and "Start over" works.
+- **Diagrams are generated from the machines.** `shared/graph.ts` reads the top-level states (grouped into
+  columns by `meta.phase`) and their transitions from the XState definition, merging every event between the
+  same two states into one arrow. `MachineDiagram` keeps the states as HTML buttons and draws the arrows in SVG
+  underneath from their measured positions, so the layout stays responsive. The arrows the machine accepts now
+  are numbered like their buttons (readable without hover, on touch screens too), and hovering a button or an
+  arrow highlights the other and shows the full label. A diagram drawn by hand would drift from the rules; a
+  graph-layout library would be heavier than the few phases each flow has.
 - **Not everything is a machine.** Payouts derive their status from dates, settlement is a fixed stepper and
   the ledger replays an event list into journal entries (event sourcing). Forcing those into XState would add
   code without adding rules.
 - **Money in integers where totals must balance exactly.** The ledger works in cents; other models round to
   cents at each step and assert totals within half a cent.
+- **One icon per topic.** Icons come from `lucide-react` (tree-shaken, decorative so `aria-hidden` next to a text
+  label). `shared/icons.ts` maps each topic to one icon, used for its tab and its glossary heading, so a topic
+  always looks the same.
 - **Illustrative numbers.** Fees, interchange rates, reason codes and deadlines are simplified and labelled as
   such in the UI; they explain the mechanics, not any one processor's pricing.
