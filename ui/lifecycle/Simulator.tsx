@@ -1,7 +1,9 @@
 import { useRef, useState } from "react";
+import { useMachine } from "@xstate/react";
 import type { Hop } from "../shared/parties";
 import Actors from "../shared/Actors";
-import { START, actionsFor, type Ledger, type LifecycleStatus, type Scenario } from "./model";
+import { EVENTS, describe, paymentMachine, type UserEvent } from "./machine";
+import type { Ledger, LifecycleStatus, Scenario } from "./model";
 import StatusMachine from "./StatusMachine";
 import LedgerPanel from "./LedgerPanel";
 
@@ -36,22 +38,20 @@ function ScenarioControls({ sc, set, locked }: { sc: Scenario; set: (s: Scenario
 }
 
 export default function Simulator() {
-  const [scenario, setScenario] = useState<Scenario>({ amount: 100, channel: "present", mode: "auto" });
-  const [status, setStatus] = useState<LifecycleStatus | null>(null);
-  const [ledger, setLedger] = useState<Ledger>(START);
-  const [captured, setCaptured] = useState(0);
+  const [snap, send, actor] = useMachine(paymentMachine, { input: { amount: 100, channel: "present", mode: "auto" } });
+  const { scenario, ledger, captured, history } = snap.context;
+  const status = snap.value === "START" ? null : (snap.value as LifecycleStatus);
   const [changed, setChanged] = useState<(keyof Ledger)[]>([]);
-  const [history, setHistory] = useState<LifecycleStatus[]>([]);
   const [peek, setPeek] = useState<LifecycleStatus | null>(null);
   const [hop, setHop] = useState<Hop | null>(null);
   const [busy, setBusy] = useState(false);
   const runId = useRef(0); // bumping it cancels an animation in flight
 
-  const actions = actionsFor(status ?? "START", scenario, captured);
+  // The machine decides which events are allowed here; the UI only renders them.
+  const actions = EVENTS.filter(type => snap.can({ type })).map(type => ({ type, ...describe(type, snap.context) }));
 
-  async function run(i: number) {
+  async function run(type: UserEvent["type"], hops: Hop[]) {
     const id = ++runId.current;
-    const { to, via = [], hops, apply, captures } = actions[i];
     setBusy(true);
     setPeek(null);
     const delay = matchMedia("(prefers-reduced-motion: reduce)").matches ? 150 : 1100;
@@ -60,23 +60,22 @@ export default function Simulator() {
       await sleep(delay);
       if (runId.current !== id) return;
     }
-    const next = apply(ledger);
-    setChanged((Object.keys(next) as (keyof Ledger)[]).filter(k => next[k] !== ledger[k]));
-    setLedger(next);
-    if (captures !== undefined) setCaptured(captures);
-    setStatus(to);
-    setHistory(hs => [...hs, ...via, to]);
+    const before = actor.getSnapshot().context.ledger;
+    send({ type });
+    const after = actor.getSnapshot().context.ledger;
+    setChanged((Object.keys(after) as (keyof Ledger)[]).filter(k => after[k] !== before[k]));
     setBusy(false);
   }
 
   function reset() {
     runId.current++;
-    setStatus(null); setLedger(START); setCaptured(0); setChanged([]); setHistory([]); setPeek(null); setHop(null); setBusy(false);
+    send({ type: "RESET" });
+    setChanged([]); setPeek(null); setHop(null); setBusy(false);
   }
 
   return (
     <section>
-      <ScenarioControls sc={scenario} set={setScenario} locked={!!status || busy} />
+      <ScenarioControls sc={scenario} set={sc => send({ type: "SET_SCENARIO", scenario: sc })} locked={!!status || busy} />
       <Actors hop={hop} />
       <div className="sim">
         <div className="panel">
@@ -84,12 +83,12 @@ export default function Simulator() {
           <StatusMachine current={status} history={history} peek={peek} onPeek={s => setPeek(p => (p === s ? null : s))} />
           <div className="actions">
             {actions.map((a, i) => (
-              <button key={a.label} className={"act" + (i ? " alt" : "")} disabled={busy} onClick={() => run(i)}>{a.label}</button>
+              <button key={a.type} className={"act" + (i ? " alt" : "")} disabled={busy} onClick={() => run(a.type, a.hops)}>{a.label}</button>
             ))}
             {(status || busy) && <button className="act alt" onClick={reset}>Start over</button>}
           </div>
           {history.length > 0 && (
-            <div className="path">path: {history.join(" → ")}{actions.length ? "" : "  (final)"}</div>
+            <div className="path">path: {history.join(" → ")}{snap.hasTag("final") ? "  (final)" : ""}</div>
           )}
         </div>
         <LedgerPanel ledger={ledger} changed={changed} authorized={history.includes("AUTHORIZED") ? scenario.amount : 0} captured={captured} />
