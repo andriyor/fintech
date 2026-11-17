@@ -1,0 +1,145 @@
+/* machine diagram: status boxes in phase columns, arrows in SVG underneath, badges and labels on top */
+.diagram {
+  position: relative;
+  margin-top: 14px;
+}
+.diagram > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.diagram > svg.labels {
+  z-index: 1;
+}
+.phases {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: clamp(40px, 7vw, 88px);
+  row-gap: 24px;
+  pointer-events: none;
+}
+@media (max-width: 560px) {
+  .phases {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.phase {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+.phase h3 {
+  margin: 0 0 4px;
+  font: 600 12px/1.3 var(--mono);
+  color: var(--muted);
+}
+.state {
+  position: relative;
+  pointer-events: auto;
+  font: 600 12px var(--mono);
+  padding: 7px 8px;
+  border-radius: 6px;
+  border: 1px dashed var(--line);
+  color: var(--idle);
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.state:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.state.visited {
+  border-style: solid;
+  color: var(--fg);
+  background: var(--idle-soft);
+}
+.state.current {
+  border-style: solid;
+  box-shadow: 0 0 0 2px var(--c);
+  color: var(--c);
+  background: var(--cs);
+}
+.state.peek {
+  border-color: var(--c);
+}
+.state.final {
+  border-width: 3px;
+  border-style: double;
+}
+.edge {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1.5;
+}
+.edge.done {
+  stroke: var(--muted);
+}
+.edge.next {
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+  animation: flow 0.8s linear infinite;
+}
+.edge.next.hot {
+  stroke-width: 3;
+  stroke-dasharray: none;
+  animation: none;
+}
+@keyframes flow {
+  to {
+    stroke-dashoffset: -9;
+  }
+}
+.head {
+  fill: var(--line);
+}
+.head.done {
+  fill: var(--muted);
+}
+.head.next {
+  fill: var(--accent);
+}
+.labels g {
+  pointer-events: auto;
+}
+.labels .hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 14;
+  pointer-events: stroke;
+}
+.badge-bg {
+  fill: var(--accent);
+}
+.hot .badge-bg {
+  fill: var(--fg);
+}
+.badge-num {
+  font: 600 10px var(--mono);
+  fill: var(--surface);
+  pointer-events: none;
+}
+.edge-label {
+  font: 500 11px var(--text);
+  fill: var(--accent);
+  stroke: var(--surface);
+  stroke-width: 4px;
+  paint-order: stroke;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+.hot .edge-label {
+  font-weight: 700;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edge.next {
+    animation: none;
+  }
+}

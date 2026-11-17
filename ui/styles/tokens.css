@@ -1,0 +1,82 @@
+/* Design tokens, and the Tailwind theme that maps utilities onto them. */
+/* Utilities read the app's tokens, so light/dark switching stays in the variables below (bg-surface, text-muted…). */
+@theme inline {
+  --color-page: var(--bg);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-hold: var(--hold);
+  --color-hold-soft: var(--hold-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --color-idle: var(--idle);
+  --color-idle-soft: var(--idle-soft);
+  --font-sans: var(--text);
+  --font-mono: var(--mono);
+  --font-display: var(--display);
+}
+
+/* Design tokens: light, dark from the system setting, and dark when forced with data-theme. */
+:root {
+  --bg: #f3f4f7;
+  --surface: #ffffff;
+  --line: #d9dce5;
+  --fg: #161a26;
+  --muted: #5b6275;
+  --accent: #3b46d1;
+  --accent-soft: #e6e8fb;
+  --hold: #b26b00;
+  --hold-soft: #fbefd9;
+  --ok: #157a4a;
+  --ok-soft: #dcf2e6;
+  --bad: #b3263b;
+  --bad-soft: #f8e0e4;
+  --idle: #8a90a2;
+  --idle-soft: #eceef3;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --text: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11131b;
+    --surface: #191c27;
+    --line: #2c3142;
+    --fg: #e8eaf2;
+    --muted: #9aa1b5;
+    --accent: #8d95ff;
+    --accent-soft: #252a4d;
+    --hold: #f0b45a;
+    --hold-soft: #3a2c14;
+    --ok: #5fd39a;
+    --ok-soft: #173426;
+    --bad: #ff7d8f;
+    --bad-soft: #3d1a22;
+    --idle: #747b90;
+    --idle-soft: #222634;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11131b;
+  --surface: #191c27;
+  --line: #2c3142;
+  --fg: #e8eaf2;
+  --muted: #9aa1b5;
+  --accent: #8d95ff;
+  --accent-soft: #252a4d;
+  --hold: #f0b45a;
+  --hold-soft: #3a2c14;
+  --ok: #5fd39a;
+  --ok-soft: #173426;
+  --bad: #ff7d8f;
+  --bad-soft: #3d1a22;
+  --idle: #747b90;
+  --idle-soft: #222634;
+  color-scheme: dark;
+}
