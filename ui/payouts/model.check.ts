@@ -1,6 +1,6 @@
 // Self-check for the payout simulation: `pnpm check` (Node strips the types).
 import assert from "node:assert/strict";
-import { DAYS, addBusinessDays, balancesOn, netOf, simulate } from "./payouts.ts";
+import { DAYS, addBusinessDays, balancesOn, netOf, simulate } from "./model.ts";
 
 assert.equal(addBusinessDays(4, 1), 7, "Friday + 1 business day is Monday");
 assert.equal(addBusinessDays(5, 2), 8, "Saturday + 2 business days is Tuesday");

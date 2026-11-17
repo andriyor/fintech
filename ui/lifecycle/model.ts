@@ -1,4 +1,6 @@
 import type { CSSProperties } from "react";
+import type { Hop } from "../shared/parties.ts";
+import { money } from "../shared/money.ts";
 
 export type LifecycleStatus =
   | "PENDING" | "AUTHORIZED" | "DECLINED"
@@ -6,7 +8,6 @@ export type LifecycleStatus =
   | "SETTLED" | "REFUNDED" | "CHARGEBACK";
 
 export type Ledger = { avail: number; held: number; merchant: number; fees: number };
-export type Hop = { route: string; text: string };
 export type Channel = "present" | "online";
 export type CaptureMode = "separate" | "auto";
 export type Scenario = { amount: number; channel: Channel; mode: CaptureMode };
@@ -16,15 +17,6 @@ export type Action = {
   apply: (l: Ledger) => Ledger;
   captures?: number;            // amount captured by this action
 };
-
-export const ACTORS = [
-  ["customer", "Customer", "cardholder"],
-  ["merchant", "Merchant", "POS / site"],
-  ["processor", "Processor", "Stripe, Adyen"],
-  ["acquirer", "Acquiring bank", "merchant's bank"],
-  ["network", "Card network", "Visa, Mastercard"],
-  ["issuer", "Issuing bank", "customer's bank"],
-] as const;
 
 export const PHASES: [string, LifecycleStatus[]][] = [
   ["1 · Authorization", ["PENDING", "AUTHORIZED", "DECLINED"]],
@@ -57,8 +49,6 @@ export const tone = (s: string): CSSProperties => {
   const [c, cs] = TONES[STATES[s as LifecycleStatus]?.[0] ?? "idle"];
   return { "--c": `var(${c})`, "--cs": `var(${cs})` } as CSSProperties;
 };
-
-export const money = (v: number) => (v < 0 ? "−" : "") + "$" + Math.abs(v).toFixed(2);
 
 // Illustrative fees: interchange 1.5%, scheme 0.15%, processor 0.5% + $0.10; $15 per chargeback.
 const round = (v: number) => Math.round(v * 100) / 100;

@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
-import { START, actionsFor, type Hop, type Ledger, type LifecycleStatus, type Scenario } from "../lifecycle";
-import Actors from "./Actors";
+import type { Hop } from "../shared/parties";
+import Actors from "../shared/Actors";
+import { START, actionsFor, type Ledger, type LifecycleStatus, type Scenario } from "./model";
 import StatusMachine from "./StatusMachine";
 import LedgerPanel from "./LedgerPanel";
 

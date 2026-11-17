@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { money } from "../lifecycle";
+import { money } from "../shared/money";
+import Toggle from "../shared/Toggle";
 import {
   ACCOUNTS, EVENTS, KINDS, available, balances, equation, normal, post, total,
   type Account, type Book, type Entry, type EventKind,
-} from "../books";
+} from "./model";
 
 const usd = (cents: number) => money(cents / 100);
 const BOOKS: [Book, string][] = [["merchant", "Merchant's books"], ["processor", "Processor's books"]];
@@ -56,7 +57,7 @@ function TAccount({ book, a, entries, balance, sel }: { book: Book; a: Account; 
   );
 }
 
-export default function Books() {
+export default function Ledger() {
   const [events, setEvents] = useState<EventKind[]>([]);
   const [book, setBook] = useState<Book>("merchant");
   const [sel, setSel] = useState(0);
@@ -93,9 +94,7 @@ export default function Books() {
             ))}
             {events.length > 0 && <button className="act alt" onClick={() => { setEvents([]); setSel(0); }}>Start over</button>}
           </div>
-          <div className="toggle" role="group" aria-label="Whose books" style={{ justifySelf: "start" }}>
-            {BOOKS.map(([k, name]) => <button key={k} aria-pressed={book === k} onClick={() => setBook(k)}>{name}</button>)}
-          </div>
+          <Toggle label="Whose books" value={book} set={setBook} options={BOOKS} />
           {entry && <p className="callout"><strong>#{entry.n} {entry.title}.</strong> {entry.why[book]}</p>}
         </div>
       </section>

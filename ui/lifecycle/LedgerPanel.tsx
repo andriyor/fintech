@@ -1,4 +1,5 @@
-import { LEDGER_ROWS, money, type Ledger } from "../lifecycle";
+import { money } from "../shared/money";
+import { LEDGER_ROWS, type Ledger } from "./model";
 
 type Props = { ledger: Ledger; changed: (keyof Ledger)[]; authorized: number; captured: number };
 

@@ -1,6 +1,6 @@
 // Self-check for the settlement model: `pnpm check`.
 import assert from "node:assert/strict";
-import { BATCH, positions, signed, split, totals } from "./settlement.ts";
+import { BATCH, positions, signed, split, totals } from "./model.ts";
 
 const near = (a: number, b: number, msg: string) => assert.ok(Math.abs(a - b) < 0.005, `${msg}: ${a} vs ${b}`);
 

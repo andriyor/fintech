@@ -1,7 +1,7 @@
+import type { Hop } from "../shared/parties.ts";
 // Chargeback (dispute) model. Pure data and functions, so chargebacks.check.ts runs under plain Node.
 // Simplified and illustrative: real reason codes, deadlines and fees vary by network and processor.
 
-export type Hop = { route: string; text: string };
 export type DisputeStatus = "NEEDS_RESPONSE" | "UNDER_REVIEW" | "WON" | "LOST" | "PRE_ARBITRATION" | "ARBITRATION";
 
 export type Evidence = { id: string; label: string };

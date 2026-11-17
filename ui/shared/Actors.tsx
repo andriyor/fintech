@@ -1,4 +1,4 @@
-import { ACTORS, type Hop } from "../lifecycle";
+import { ACTORS, type Hop } from "./parties";
 
 export default function Actors({ hop, note }: { hop: Hop | null; note?: string }) {
   const active = hop ? hop.route.split("→") : [];

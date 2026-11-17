@@ -1,9 +1,9 @@
 import { useMemo, useState, type CSSProperties } from "react";
-import { money } from "../lifecycle";
+import { money } from "../shared/money";
 import {
   ACTIVITY, DAYS, balancesOn, dayLabel, isBusinessDay, payoutStatus, simulate,
   type Balances, type Entry, type Payout, type PayoutStatus, type Settings,
-} from "../payouts";
+} from "./model";
 
 const BUCKETS: [keyof Balances, string, string, string][] = [
   ["pending", "Pending", "Captured, waiting for settlement (T+N)", "--idle"],

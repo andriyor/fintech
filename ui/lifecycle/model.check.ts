@@ -1,6 +1,6 @@
 // Self-check for the payment lifecycle: `pnpm check`.
 import assert from "node:assert/strict";
-import { PARTIAL, START, actionsFor, feeOn, type LifecycleStatus, type Scenario } from "./lifecycle.ts";
+import { PARTIAL, START, actionsFor, feeOn, type LifecycleStatus, type Scenario } from "./model.ts";
 
 const total = (l: typeof START) => Math.round((l.avail + l.held + l.merchant + l.fees) * 100) / 100;
 

@@ -1,6 +1,6 @@
 // Self-check for the double-entry model: `pnpm check`.
 import assert from "node:assert/strict";
-import { available, balances, equation, post, total, type Book, type EventKind } from "./books.ts";
+import { available, balances, equation, post, total, type Book, type EventKind } from "./model.ts";
 
 const paths: EventKind[][] = [
   ["sale", "sale", "refund", "settle", "payout"],

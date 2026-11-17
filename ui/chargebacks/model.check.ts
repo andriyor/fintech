@@ -1,6 +1,6 @@
 // Self-check for the chargeback model: `pnpm check`.
 import assert from "node:assert/strict";
-import { ARBITRATION_FEE, DISPUTE_FEE, ORDER, REASONS, decide, ratioBand, stepsFrom, type DisputeStatus } from "./chargebacks.ts";
+import { ARBITRATION_FEE, DISPUTE_FEE, ORDER, REASONS, decide, ratioBand, stepsFrom, type DisputeStatus } from "./model.ts";
 
 const fraud = REASONS.find(r => r.id === "fraud")!;
 assert.equal(decide(fraud, ["3ds"]), true, "3-D Secure alone wins fraud");

@@ -1,10 +1,11 @@
 import { useState, type CSSProperties } from "react";
-import { money } from "../lifecycle";
+import { money } from "../shared/money";
 import {
   BATCH, INTERCHANGE, STAGES, interchangeOf, positions, signed, split, totals,
   type Pricing, type Split, type Tx,
-} from "../settlement";
-import Actors from "./Actors";
+} from "./model";
+import Actors from "../shared/Actors";
+import Toggle from "../shared/Toggle";
 
 const PARTS: [keyof Split, string, string][] = [
   ["interchange", "Issuer (interchange)", "--hold"],
@@ -16,14 +17,6 @@ const STATUS = ["CAPTURED", "IN BATCH", "CLEARED", "SETTLED", "FUNDED"];
 const STATUS_TONE = ["--idle", "--accent", "--hold", "--ok", "--ok"];
 const toneOf = (c: string) => ({ "--c": `var(${c})`, "--cs": `var(${c}-soft)` }) as CSSProperties;
 const pct = (v: number, of: number) => (of ? `${((v / of) * 100).toFixed(2)}%` : "—");
-
-function Toggle<T extends string>({ value, set, options, label }: { value: T; set: (v: T) => void; options: [T, string][]; label: string }) {
-  return (
-    <div className="toggle" role="group" aria-label={label}>
-      {options.map(([v, name]) => <button key={v} aria-pressed={value === v} onClick={() => set(v)}>{name}</button>)}
-    </div>
-  );
-}
 
 function Stages({ stage, setStage }: { stage: number; setStage: (n: number) => void }) {
   const s = STAGES[stage];

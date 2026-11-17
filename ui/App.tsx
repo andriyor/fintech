@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import Simulator from "./components/Simulator";
-import RepoData from "./components/RepoData";
-import Terms from "./components/Terms";
-import Payouts from "./components/Payouts";
-import Chargebacks from "./components/Chargebacks";
-import Settlement from "./components/Settlement";
-import Books from "./components/Books";
+import Lifecycle from "./lifecycle/Lifecycle";
+import Settlement from "./settlement/Settlement";
+import Payouts from "./payouts/Payouts";
+import Chargebacks from "./chargebacks/Chargebacks";
+import Ledger from "./ledger/Ledger";
+import RepoData from "./repo/RepoData";
 
 const TABS = [
   ["lifecycle", "Payment lifecycle"],
@@ -38,27 +37,11 @@ export default function App() {
           ))}
         </nav>
       </header>
-      {tab === "lifecycle" && (
-        <>
-          <section>
-            <div style={{ display: "grid", gap: 6 }}>
-              <span className="eyebrow">from tap to merchant</span>
-              <h2>The life of one card payment</h2>
-              <p className="lede">
-                Every card payment goes through authorization, capture, clearing and settlement, and may later be
-                refunded or disputed. Pick a scenario, then step through it: watch which parties talk to each other,
-                what status the payment has, and where the money sits at each step.
-              </p>
-            </div>
-          </section>
-          <Simulator />
-          <Terms />
-        </>
-      )}
+      {tab === "lifecycle" && <Lifecycle />}
       {tab === "settlement" && <Settlement />}
       {tab === "payouts" && <Payouts />}
       {tab === "chargebacks" && <Chargebacks />}
-      {tab === "ledger" && <Books />}
+      {tab === "ledger" && <Ledger />}
       {tab === "repo" && <RepoData />}
     </div>
   );

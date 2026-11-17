@@ -1,4 +1,4 @@
-import { PHASES, STATES, tone, type LifecycleStatus } from "../lifecycle";
+import { PHASES, STATES, tone, type LifecycleStatus } from "./model";
 import Badge from "./Badge";
 
 type Props = {

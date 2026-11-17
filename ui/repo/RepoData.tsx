@@ -1,8 +1,9 @@
 import { useState } from "react";
 import type { Transaction } from "../../src/types";
 import { aggregate } from "../../src/utils/single-pass";
-import { money } from "../lifecycle";
-import Badge from "./Badge";
+import { money } from "../shared/money";
+import Badge from "../lifecycle/Badge";
+import Toggle from "../shared/Toggle";
 
 // The real files, read at build time — edits to transactions/*.json show up on reload.
 const files = import.meta.glob<Transaction>("../../transactions/*.json", { eager: true, import: "default" });
@@ -70,10 +71,7 @@ export default function RepoData() {
         </p>
       </div>
       <div>
-        <div className="toggle" role="group" aria-label="Counting mode">
-          <button aria-pressed={mode === "all"} onClick={() => setMode("all")}>Sum every status</button>
-          <button aria-pressed={mode === "real"} onClick={() => setMode("real")}>Money that moved</button>
-        </div>
+        <Toggle label="Counting mode" value={mode} set={setMode} options={[["all", "Sum every status"], ["real", "Money that moved"]]} />
       </div>
       <div className="cols">
         <div className="panel scroll">

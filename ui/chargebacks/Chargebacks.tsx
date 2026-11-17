@@ -1,10 +1,10 @@
 import { useRef, useState, type CSSProperties } from "react";
-import { money } from "../lifecycle";
+import { money } from "../shared/money";
 import {
   CARD_FEE, DISPUTE_FEE, ORDER, PHASES, REASONS, STATUS_INFO, decide, ratioBand, stepsFrom,
   type DisputeStatus, type Entry, type Hop,
-} from "../chargebacks";
-import Actors from "./Actors";
+} from "./model";
+import Actors from "../shared/Actors";
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 const toneOf = (c: string) => ({ "--c": `var(${c})`, "--cs": `var(${c}-soft)` }) as CSSProperties;
