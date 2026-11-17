@@ -43,11 +43,30 @@ Amount of money an individual or entity receives after all deductions, such as t
 
 [Payfac in 1,000 words - Matt Brown's Notes](https://notes.mtb.xyz/p/payfac-1000-words)
 
+[Payments Basics - Pagos docs](https://docs.pagos.ai/docs/payments-basics): lifecycle, chargebacks, interchange, 3-D Secure
+
+[Authorisation, clearing and settlement explained - Monavate](https://www.monavate.com/learn-articles/authorisation-clearing-settlement-explained)
+
+[How Payments Work - Barking Iguana](https://barkingiguana.com/writing/how-payments-work/)
+
+[Credit card payments cycle - Payabli docs](https://docs.payabli.com/guides/pay-in-cards-cycle-overview)
+
+#### Similar interactive explainers
+
+[How Card Payments Actually Work - debtman.dev](https://debtman-dev.pages.dev/blog/how-card-payments-actually-work):
+article with a step-through [lab](https://debtman-dev.pages.dev/lab/card-payments) and a
+[quiz](https://debtman-dev.pages.dev/quiz/systems/card-payments)
+
+[Design: Payment System - Neel Mishra](https://neelmishra.github.io/blog/hld/real-world/payment-system.html):
+system-design write-up with step-through payment flow and double-entry ledger widgets
+
 ## Interactive UI
 
 `ui/` is a small app that explains the concepts above by simulation: payment lifecycle, tokenization, fraud and risk scoring,
 settlement, payouts, chargebacks and double-entry bookkeeping, a glossary of the terms they use, plus the aggregates computed from
 `transactions/`.
+
+Live: https://fintech-omega-six.vercel.app (deploys from `main` on every push)
 
 ```sh
 pnpm install
@@ -68,13 +87,16 @@ pnpm report  # PDF of the aggregates in transactions/ (page.pdf); needs `pnpm ex
 
 ## Technical decisions
 
-- **Vite + React, no router or UI kit.** Tabs are switched by URL hash (`#settlement`). The app is a teaching
-  tool, so fewer moving parts beat flexibility.
+- **Vite + React, no router or UI kit.** Pages are switched by URL hash (`#settlement`). A sidebar groups
+  them (overview, the journey steps in the order money moves, reference), each journey step links to the previous
+  and next one, and `ui/shared/tabs.ts` is the single list both the sidebar and the overview read. The app is a
+  teaching tool, so fewer moving parts beat flexibility.
 - **Tailwind for one-off styling, CSS for shared building blocks.** Tailwind v4 (Vite plugin, no preflight)
   styles anything a single tab uses, right in its markup. Its theme maps the app's color tokens (`bg-surface`,
-  `text-muted`…), so light/dark switching stays in CSS variables. `styles.css` keeps only what many tabs share
-  (panel, eyebrow, note, buttons, badges, tables, form controls) and the machine diagram, which reads better as
-  named CSS, in a `components` layer so a utility always overrides it. Inline `style` is left only for values
+  `text-muted`…), so light/dark switching stays in CSS variables. `ui/styles.css` is only the entry that imports
+  `ui/styles/`: `tokens.css` (colors and the Tailwind theme), `base.css` (what many tabs share: panel, eyebrow,
+  note, buttons, badges, tables, form controls) and `diagram.css` (the machine diagram, which reads better as named
+  CSS). The last two sit in a `components` layer so a utility always overrides them. Inline `style` is left only for values
   computed from data (widths, positions, tones). This roughly halved the hand-written CSS rules.
 - **XState for the two flows that are state machines.** The payment lifecycle and the chargeback dispute are
   XState v5 machines (`machine.ts`). The machine is the single source of rules: the UI renders only the events
