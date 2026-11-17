@@ -84,13 +84,6 @@ export const STATUS_INFO: Record<DisputeStatus, [string, string]> = {
   ARBITRATION: ["--bad", "The card network rules. Final, and the loser pays a large fee (here $500)."],
 };
 
-export const PHASES: [string, DisputeStatus[]][] = [
-  ["1 · Chargeback", ["NEEDS_RESPONSE"]],
-  ["2 · Representment", ["UNDER_REVIEW"]],
-  ["3 · Decision", ["WON", "LOST"]],
-  ["4 · Second cycle", ["PRE_ARBITRATION", "ARBITRATION"]],
-];
-
 /** Illustrative chargeback-ratio bands; networks' monitoring programs use their own, changing thresholds. */
 export function ratioBand(ratio: number): [string, string] {
   if (ratio < 0.005) return ["--ok", "Healthy. Well under the levels card networks watch."];

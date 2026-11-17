@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { describe, it } from "vitest";
 import { createActor } from "xstate";
 import { EVENTS, disputeMachine, type UserEvent } from "./machine";
-import { ARBITRATION_FEE, DISPUTE_FEE, ORDER, PHASES, REASONS, decide, ratioBand } from "./model";
+import { graphOf } from "../shared/graph";
+import { ARBITRATION_FEE, DISPUTE_FEE, ORDER, REASONS, STATUS_INFO, decide, ratioBand } from "./model";
 
 function play(evidence: string[], path: UserEvent["type"][]) {
   const actor = createActor(disputeMachine).start();
@@ -13,7 +14,8 @@ function play(evidence: string[], path: UserEvent["type"][]) {
     actor.send({ type });
   }
   const snap = actor.getSnapshot();
-  return { snap, cost: snap.context.entries.reduce((a, e) => a + e.amount, 0), status: snap.context.timeline.at(-1)?.status };
+  const last = snap.context.timeline.at(-1);
+  return { snap, cost: snap.context.entries.reduce((a, e) => a + e.amount, 0), status: last?.status, node: last?.node };
 }
 
 describe("dispute evidence", () => {
@@ -37,15 +39,24 @@ describe("dispute machine", () => {
       const queue: UserEvent["type"][][] = [[]];
       while (queue.length) {
         const path = queue.shift()!;
-        const { snap, cost, status } = play(evidence, path);
-        if (status) seen.add(status);
+        const { snap, cost, node } = play(evidence, path);
+        if (node) seen.add(node);
         const next = EVENTS.filter(type => snap.can({ type }));
         assert.equal(next.length === 0, snap.hasTag("final"), `${snap.value}: only final states are dead ends`);
         if (!next.length) assert.ok(cost >= -ORDER - DISPUTE_FEE - ARBITRATION_FEE, `${path} costs at most order + both fees`);
         for (const type of next) queue.push([...path, type]);
       }
     }
-    assert.deepEqual([...seen].sort(), PHASES.flatMap(([, s]) => s).sort());
+    assert.deepEqual([...seen].sort(), graphOf(disputeMachine).nodes.map(n => n.key).sort());
+  });
+
+  it("draws two cycles, with arbitration's win as its own final state", () => {
+    const g = graphOf(disputeMachine);
+    assert.equal(g.initial, "NEEDS_RESPONSE");
+    assert.ok(g.nodes.every(n => n.phase && n.status in STATUS_INFO), "every state has a phase and a description");
+    assert.deepEqual(g.nodes.find(n => n.key === "WON_FINAL"), { key: "WON_FINAL", phase: "4 · Second cycle", label: "WON", status: "WON", final: true });
+    assert.deepEqual(g.edges.find(e => e.from === "NEEDS_RESPONSE" && e.to === "LOST")!.events, ["ACCEPT", "MISS_DEADLINE"]);
+    assert.ok(!g.edges.some(e => e.from === "WON_FINAL"), "nothing leaves a final state");
   });
 
   it("charges the merchant what each outcome costs", () => {

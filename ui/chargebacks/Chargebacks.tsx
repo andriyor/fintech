@@ -3,8 +3,13 @@ import { useMachine } from "@xstate/react";
 import { money } from "../shared/money";
 import type { Hop } from "../shared/parties";
 import Actors from "../shared/Actors";
-import { CARD_FEE, DISPUTE_FEE, ORDER, PHASES, REASONS, STATUS_INFO, ratioBand, type DisputeStatus } from "./model";
+import { CARD_FEE, DISPUTE_FEE, ORDER, REASONS, STATUS_INFO, ratioBand, type DisputeStatus } from "./model";
 import { EVENTS, LABELS, disputeMachine, hopsFor, wins, type UserEvent } from "./machine";
+import { graphOf } from "../shared/graph";
+import MachineDiagram from "../shared/MachineDiagram";
+
+const GRAPH = graphOf(disputeMachine);
+const statusOf = (key: string) => GRAPH.nodes.find(n => n.key === key)!.status as DisputeStatus;
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 const toneOf = (c: string) => ({ "--c": `var(${c})`, "--cs": `var(${c}-soft)` }) as CSSProperties;
@@ -14,9 +19,11 @@ function Dispute() {
   const [snap, send] = useMachine(disputeMachine);
   const { reasonId, evidence, entries: ledger, timeline: events } = snap.context;
   const status = events.at(-1)?.status ?? null;
+  const node = events.at(-1)?.node ?? null; // machine state; WON_FINAL shows as WON
   const [hop, setHop] = useState<Hop | null>(null);
   const [busy, setBusy] = useState(false);
-  const [peek, setPeek] = useState<DisputeStatus | null>(null);
+  const [hot, setHot] = useState<string[]>([]); // events whose button or arrow is pointed at
+  const [peek, setPeek] = useState<string | null>(null); // a machine state key
   const runId = useRef(0);
 
   const reason = REASONS.find(r => r.id === reasonId)!;
@@ -45,7 +52,7 @@ function Dispute() {
   }
 
   const total = ledger.reduce((a, e) => a + e.amount, 0);
-  const shown = peek ?? status;
+  const shown = peek ?? node ? statusOf((peek ?? node)!) : null;
   const day = events.length ? events[events.length - 1].day : null;
 
   return (
@@ -64,29 +71,24 @@ function Dispute() {
 
       <Actors hop={hop} />
 
+      <div className="panel">
+        <div className="eyebrow">Dispute status · click any status to read about it</div>
+        <MachineDiagram graph={GRAPH} current={node} path={events.map(e => e.node)} tone={s => statusTone(s as DisputeStatus)}
+          actions={[...steps]} label={e => LABELS[e as UserEvent["type"]]} hot={busy ? [] : hot} onHot={setHot} peek={peek} onPeek={k => setPeek(p => (p === k ? null : k))} />
+      </div>
+
       <div className="sim">
         <div className="panel">
-          <div className="eyebrow">Dispute status · click any status to read about it</div>
-          <div className="phases" style={{ marginTop: 14 }}>
-            {PHASES.map(([title, list]) => (
-              <div className="phase" key={title}>
-                <h3>{title}</h3>
-                {list.map(s => (
-                  <button key={s} style={statusTone(s)} aria-pressed={s === status}
-                    className={["state", events.some(e => e.status === s) && "visited", s === status && "current", s === peek && "peek"].filter(Boolean).join(" ")}
-                    onClick={() => setPeek(p => (p === s ? null : s))}>{s}</button>
-                ))}
-              </div>
-            ))}
-          </div>
           <div className="detail">
             {shown
-              ? <><div><span className="badge" style={statusTone(shown)}>{shown}</span>{peek && peek !== status && <span className="note"> (reading only — not the current status)</span>}</div><p>{STATUS_INFO[shown][1]}</p></>
+              ? <><div><span className="badge" style={statusTone(shown)}>{shown}</span>{peek && peek !== node && <span className="note"> (reading only — not the current status)</span>}</div><p>{STATUS_INFO[shown][1]}</p></>
               : <p className="lede">No dispute yet. Pick a reason, then let the customer dispute the charge.</p>}
           </div>
           <div className="actions">
             {steps.map((type, i) => (
-              <button key={type} className={"act" + (i ? " alt" : "")} disabled={busy} onClick={() => run(type)}>{LABELS[type]}</button>
+              <button key={type} className={"act" + (i ? " alt" : "") + (hot.includes(type) ? " hot" : "")} disabled={busy}
+                onMouseEnter={() => setHot([type])} onMouseLeave={() => setHot([])} onFocus={() => setHot([type])} onBlur={() => setHot([])}
+                onClick={() => { setHot([]); run(type); }}><span className="num">{i + 1}</span>{LABELS[type]}</button>
             ))}
             {(status || busy) && <button className="act alt" onClick={reset}>Start over</button>}
           </div>

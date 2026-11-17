@@ -4,7 +4,8 @@ import { assign, setup } from "xstate";
 import type { Hop } from "../shared/parties";
 import { ARBITRATION_FEE, DAYS, DISPUTE_FEE, ORDER, REASONS, decide, type DisputeStatus, type Entry } from "./model";
 
-export type TimelineItem = { day: number; status: DisputeStatus; label: string };
+// `node` is the machine state entered; it differs from `status` only for WON_FINAL.
+export type TimelineItem = { day: number; status: DisputeStatus; node: string; label: string };
 export type Context = { reasonId: string; evidence: string[]; entries: Entry[]; timeline: TimelineItem[] };
 
 // User actions in button order (first one is the primary action).
@@ -27,7 +28,7 @@ export const LABELS: Record<UserEvent["type"], string> = {
 };
 
 export const wins = (c: Context) => decide(REASONS.find(r => r.id === c.reasonId)!, c.evidence);
-const log = (status: DisputeStatus, day: number) => ({ type: "log", params: { status, day } }) as const;
+const log = (status: DisputeStatus, day: number, node: string = status) => ({ type: "log", params: { status, day, node } }) as const;
 const money = (label: string, amount: number) => ({ type: "book", params: { label, amount } }) as const;
 const toggle = { actions: "toggleEvidence" } as const;
 
@@ -36,7 +37,7 @@ export const disputeMachine = setup({
   guards: { wins: ({ context }) => wins(context) },
   actions: {
     log: assign({
-      timeline: ({ context, event }, p: { status: DisputeStatus; day: number }) =>
+      timeline: ({ context, event }, p: { status: DisputeStatus; day: number; node: string }) =>
         [...context.timeline, { ...p, label: LABELS[event.type as UserEvent["type"]] }],
     }),
     book: assign({ entries: ({ context }, p: Entry) => [...context.entries, p] }),
@@ -66,6 +67,7 @@ export const disputeMachine = setup({
     },
     // First cycle: the merchant may change its evidence until it responds.
     NEEDS_RESPONSE: {
+      meta: { phase: "1 · Chargeback" },
       on: {
         TOGGLE_EVIDENCE: toggle,
         SUBMIT: { target: "UNDER_REVIEW", actions: log("UNDER_REVIEW", 5) },
@@ -74,6 +76,7 @@ export const disputeMachine = setup({
       },
     },
     UNDER_REVIEW: {
+      meta: { phase: "2 · Representment" },
       on: {
         ISSUER_DECIDES: [
           { guard: "wins", target: "WON", actions: [log("WON", DAYS.issuerDecision), money("Chargeback reversed", ORDER)] },
@@ -82,10 +85,12 @@ export const disputeMachine = setup({
       },
     },
     WON: {
+      meta: { phase: "3 · Decision" },
       on: { PRE_ARB: { target: "PRE_ARBITRATION", actions: [log("PRE_ARBITRATION", DAYS.preArb), money("Pre-arbitration debit", -ORDER)] } },
     },
     // Second cycle: the merchant can strengthen its evidence before escalating.
     PRE_ARBITRATION: {
+      meta: { phase: "4 · Second cycle" },
       on: {
         TOGGLE_EVIDENCE: toggle,
         ESCALATE: { target: "ARBITRATION", actions: log("ARBITRATION", DAYS.preArb + 10) },
@@ -93,15 +98,16 @@ export const disputeMachine = setup({
       },
     },
     ARBITRATION: {
+      meta: { phase: "4 · Second cycle" },
       on: {
         NETWORK_RULES: [
-          { guard: "wins", target: "WON_FINAL", actions: [log("WON", DAYS.arbitration), money("Arbitration won, funds returned", ORDER)] },
+          { guard: "wins", target: "WON_FINAL", actions: [log("WON", DAYS.arbitration, "WON_FINAL"), money("Arbitration won, funds returned", ORDER)] },
           { target: "LOST", actions: [log("LOST", DAYS.arbitration), money("Arbitration fee (loser pays)", -ARBITRATION_FEE)] },
         ],
       },
     },
-    LOST: { tags: "final" },
-    WON_FINAL: { tags: "final" }, // won in arbitration: the network's ruling can't be appealed
+    LOST: { meta: { phase: "3 · Decision" }, tags: "final" },
+    WON_FINAL: { meta: { phase: "4 · Second cycle", label: "WON", status: "WON" }, tags: "final" }, // won in arbitration: the network's ruling can't be appealed
   },
 });
 

@@ -56,6 +56,7 @@ export const paymentMachine = setup({
       },
     },
     PENDING: {
+      meta: { phase: "1 · Authorization" },
       entry: { type: "record", params: { status: "PENDING" } },
       on: {
         APPROVE: { target: "AUTHORIZED", actions: "hold" },
@@ -63,6 +64,7 @@ export const paymentMachine = setup({
       },
     },
     AUTHORIZED: {
+      meta: { phase: "1 · Authorization" },
       entry: { type: "record", params: { status: "AUTHORIZED" } },
       // Automatic capture: the sale is captured the moment it is approved.
       always: { guard: "autoCapture", target: "CAPTURED", actions: { type: "capture", params: { share: 1 } } },
@@ -74,29 +76,32 @@ export const paymentMachine = setup({
         CAPTURE_FAIL: "FAILED",
       },
     },
+    CAPTURED: {
+      meta: { phase: "2 · Capture" },
+      entry: { type: "record", params: { status: "CAPTURED" } },
+      on: { CLOSE_BATCH: { target: "SETTLED", actions: "settle" } },
+    },
     FAILED: {
+      meta: { phase: "2 · Capture" },
       entry: { type: "record", params: { status: "FAILED" } },
       on: {
         RETRY: { target: "CAPTURED", actions: { type: "capture", params: { share: 1 } } },
         GIVE_UP: { target: "EXPIRED", actions: "release" },
       },
     },
-    CAPTURED: {
-      entry: { type: "record", params: { status: "CAPTURED" } },
-      on: { CLOSE_BATCH: { target: "SETTLED", actions: "settle" } },
-    },
     SETTLED: {
+      meta: { phase: "3 · Settlement" },
       entry: { type: "record", params: { status: "SETTLED" } },
       on: {
         REFUND: { target: "REFUNDED", actions: "refund" },
         DISPUTE: { target: "CHARGEBACK", actions: "chargeback" },
       },
     },
-    DECLINED: { tags: "final", entry: { type: "record", params: { status: "DECLINED" } } },
-    VOIDED: { tags: "final", entry: { type: "record", params: { status: "VOIDED" } } },
-    EXPIRED: { tags: "final", entry: { type: "record", params: { status: "EXPIRED" } } },
-    REFUNDED: { tags: "final", entry: { type: "record", params: { status: "REFUNDED" } } },
-    CHARGEBACK: { tags: "final", entry: { type: "record", params: { status: "CHARGEBACK" } } },
+    DECLINED: { meta: { phase: "1 · Authorization" }, tags: "final", entry: { type: "record", params: { status: "DECLINED" } } },
+    VOIDED: { meta: { phase: "2 · Capture" }, tags: "final", entry: { type: "record", params: { status: "VOIDED" } } },
+    EXPIRED: { meta: { phase: "2 · Capture" }, tags: "final", entry: { type: "record", params: { status: "EXPIRED" } } },
+    REFUNDED: { meta: { phase: "4 · Post-settlement" }, tags: "final", entry: { type: "record", params: { status: "REFUNDED" } } },
+    CHARGEBACK: { meta: { phase: "4 · Post-settlement" }, tags: "final", entry: { type: "record", params: { status: "CHARGEBACK" } } },
   },
 });
 

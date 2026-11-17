@@ -10,13 +10,6 @@ export type Channel = "present" | "online";
 export type CaptureMode = "separate" | "auto";
 export type Scenario = { amount: number; channel: Channel; mode: CaptureMode };
 
-export const PHASES: [string, LifecycleStatus[]][] = [
-  ["1 · Authorization", ["PENDING", "AUTHORIZED", "DECLINED"]],
-  ["2 · Capture", ["CAPTURED", "VOIDED", "EXPIRED", "FAILED"]],
-  ["3 · Settlement", ["SETTLED"]],
-  ["4 · Post-settlement", ["REFUNDED", "CHARGEBACK"]],
-];
-
 type Tone = "ok" | "hold" | "bad" | "idle" | "acc";
 const TONES: Record<Tone, [string, string]> = {
   ok: ["--ok", "--ok-soft"], hold: ["--hold", "--hold-soft"], bad: ["--bad", "--bad-soft"],

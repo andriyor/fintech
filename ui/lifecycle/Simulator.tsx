@@ -4,7 +4,7 @@ import type { Hop } from "../shared/parties";
 import Actors from "../shared/Actors";
 import { EVENTS, describe, paymentMachine, type UserEvent } from "./machine";
 import type { Ledger, LifecycleStatus, Scenario } from "./model";
-import StatusMachine from "./StatusMachine";
+import StatusMachine, { StatusDetail } from "./StatusMachine";
 import LedgerPanel from "./LedgerPanel";
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
@@ -45,6 +45,7 @@ export default function Simulator() {
   const [peek, setPeek] = useState<LifecycleStatus | null>(null);
   const [hop, setHop] = useState<Hop | null>(null);
   const [busy, setBusy] = useState(false);
+  const [hot, setHot] = useState<string[]>([]); // events whose button or arrow is pointed at
   const runId = useRef(0); // bumping it cancels an animation in flight
 
   // The machine decides which events are allowed here; the UI only renders them.
@@ -77,13 +78,19 @@ export default function Simulator() {
     <section>
       <ScenarioControls sc={scenario} set={sc => send({ type: "SET_SCENARIO", scenario: sc })} locked={!!status || busy} />
       <Actors hop={hop} />
+      <div className="panel">
+        <div className="eyebrow">Status machine · click any status to read about it</div>
+        <StatusMachine current={status} history={history} actions={actions.map(a => a.type)}
+          label={e => describe(e as UserEvent["type"], snap.context).label} hot={busy ? [] : hot} onHot={setHot} peek={peek} onPeek={s => setPeek(p => (p === s ? null : s))} />
+      </div>
       <div className="sim">
         <div className="panel">
-          <div className="eyebrow">Status machine · click any status to read about it</div>
-          <StatusMachine current={status} history={history} peek={peek} onPeek={s => setPeek(p => (p === s ? null : s))} />
+          <StatusDetail current={status} peek={peek} />
           <div className="actions">
             {actions.map((a, i) => (
-              <button key={a.type} className={"act" + (i ? " alt" : "")} disabled={busy} onClick={() => run(a.type, a.hops)}>{a.label}</button>
+              <button key={a.type} className={"act" + (i ? " alt" : "") + (hot.includes(a.type) ? " hot" : "")} disabled={busy}
+                onMouseEnter={() => setHot([a.type])} onMouseLeave={() => setHot([])} onFocus={() => setHot([a.type])} onBlur={() => setHot([])}
+                onClick={() => { setHot([]); run(a.type, a.hops); }}><span className="num">{i + 1}</span>{a.label}</button>
             ))}
             {(status || busy) && <button className="act alt" onClick={reset}>Start over</button>}
           </div>

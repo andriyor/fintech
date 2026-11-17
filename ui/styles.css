@@ -173,3 +173,43 @@ button.jn[aria-pressed="true"] { border-color: var(--accent); color: var(--accen
 .tsides span em { color: var(--muted); font-style: normal; }
 .tsides span.hit { color: var(--accent); font-weight: 600; }
 .tbal { margin-top: 6px; display: flex; justify-content: space-between; font: 600 12px var(--mono); }
+
+/* machine diagram: state buttons in phase columns, arrows drawn underneath from the machine's transitions */
+.diagram { position: relative; margin-top: 14px; }
+.diagram > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.diagram .phases { position: relative; column-gap: 40px; row-gap: 24px; }
+.diagram .phase { gap: 16px; }
+.diagram .state { position: relative; background: var(--surface); overflow-wrap: anywhere; }
+.diagram .state.visited { background: var(--idle-soft); }
+.diagram .state.current { background: var(--cs); }
+.state.final { border-width: 3px; border-style: double; }
+.edge { fill: none; stroke: var(--line); stroke-width: 1.5; }
+.edge.done { stroke: var(--muted); }
+.edge.next { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 5 4; animation: flow .8s linear infinite; }
+.head { fill: var(--line); }
+.head.done { fill: var(--muted); }
+.head.next { fill: var(--accent); }
+@keyframes flow { to { stroke-dashoffset: -9; } }
+@media (prefers-reduced-motion: reduce) { .edge.next { animation: none; } }
+.start-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--fg); justify-self: start; margin-left: 10px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; margin-top: 14px; }
+.legend > span { display: inline-flex; gap: 6px; align-items: center; }
+.legend .start-dot { margin: 0; width: 10px; height: 10px; }
+.diagram > svg.labels { z-index: 1; }
+.diagram .phases { pointer-events: none; }
+.diagram .phases .state { pointer-events: auto; }
+.labels .hit { fill: none; stroke: transparent; stroke-width: 14; pointer-events: stroke; cursor: default; }
+.edge-label { font: 500 11px var(--text); fill: var(--accent); stroke: var(--surface); stroke-width: 4px; paint-order: stroke; stroke-linejoin: round; pointer-events: none; }
+.hot .edge-label { font-weight: 700; }
+.edge.next.hot { stroke-width: 3; stroke-dasharray: none; animation: none; }
+button.act.hot { box-shadow: 0 0 0 3px var(--accent-soft); }
+.badge-bg { fill: var(--accent); }
+.hot .badge-bg { fill: var(--fg); }
+.badge-num { font: 600 10px var(--mono); fill: var(--surface); pointer-events: none; }
+.labels g { pointer-events: auto; }
+.labels .badge-bg { cursor: default; }
+button.act .num { display: inline-block; min-width: 16px; margin-right: 6px; padding: 0 4px; border-radius: 8px; font: 600 10px/16px var(--mono); text-align: center; background: var(--surface); color: var(--accent); }
+button.act.alt .num { background: var(--accent); color: var(--surface); }
+.panel > .detail:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+/* full-width diagram: wider gaps between phase columns leave room for arrows and their badges */
+.diagram .phases { column-gap: clamp(40px, 7vw, 88px); }
