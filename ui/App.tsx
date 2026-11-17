@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import Overview from "./overview/Overview";
 import Lifecycle from "./lifecycle/Lifecycle";
 import Fraud from "./fraud/Fraud";
@@ -10,63 +11,95 @@ import Ledger from "./ledger/Ledger";
 import RepoData from "./repo/RepoData";
 import Terms from "./terms/Terms";
 import { TOPIC_ICONS } from "./shared/icons";
+import { GROUPS, JOURNEY, TAB_IDS, type Tab } from "./shared/tabs";
 
-const TABS = [
-  ["overview", "Overview"],
-  ["lifecycle", "Payment lifecycle"],
-  ["tokens", "Tokenization"],
-  ["fraud", "Fraud & risk"],
-  ["settlement", "Settlement"],
-  ["payouts", "Payouts"],
-  ["chargebacks", "Chargebacks"],
-  ["ledger", "Double-entry ledger"],
-  ["terms", "Terms"],
-  ["repo", "Repo data"],
-] as const;
-type Tab = (typeof TABS)[number][0];
+const fromHash = (): Tab => TAB_IDS.find(id => `#${id}` === location.hash) ?? "overview";
 
-const fromHash = (): Tab => TABS.find(([id]) => `#${id}` === location.hash)?.[0] ?? "overview";
+const LINK =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent no-underline rounded-md";
 
 export default function App() {
   const [tab, setTab] = useState<Tab>(fromHash);
   useEffect(() => {
-    const on = () => setTab(fromHash());
+    const on = () => {
+      setTab(fromHash());
+      scrollTo(0, 0);
+    };
     addEventListener("hashchange", on);
     return () => removeEventListener("hashchange", on);
   }, []);
 
+  const step = JOURNEY.findIndex(([id]) => id === tab);
+  const prev = step > 0 ? JOURNEY[step - 1] : step === 0 ? (["overview", "Overview"] as const) : null;
+  const next = step >= 0 && step < JOURNEY.length - 1 ? JOURNEY[step + 1] : null;
+
   return (
-    <div className="mx-auto grid max-w-[1120px] gap-10 pt-8 pr-[max(16px,env(safe-area-inset-right,0px))] pb-16 pl-[max(16px,env(safe-area-inset-left,0px))]">
-      <header className="grid gap-2.5">
-        <span className="eyebrow">fintech basics</span>
-        <h1>How Card Payments Work</h1>
-        <nav className="flex flex-wrap gap-1 border-b border-line">
-          {TABS.map(([id, name]) => {
-            const Icon = TOPIC_ICONS[id];
-            return (
-              <a
-                key={id}
-                className="-mb-px inline-flex items-center gap-1.5 border-b-2 border-transparent px-3.5 py-2 font-medium text-muted no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent aria-[current=page]:border-accent aria-[current=page]:text-accent"
-                href={`#${id}`}
-                aria-current={tab === id ? "page" : undefined}
-              >
-                <Icon size={16} />
-                {name}
-              </a>
-            );
-          })}
+    <div className="mx-auto grid max-w-[1360px] gap-8 pt-8 pr-[max(16px,env(safe-area-inset-right,0px))] pb-16 pl-[max(16px,env(safe-area-inset-left,0px))] lg:grid-cols-[210px_minmax(0,1fr)]">
+      <header className="grid content-start gap-4 lg:sticky lg:top-8 lg:self-start">
+        <div className="grid gap-1">
+          <span className="eyebrow">fintech basics</span>
+          <h1 className="text-[22px] leading-tight">How Card Payments Work</h1>
+        </div>
+        <nav className="flex gap-4 overflow-x-auto max-lg:-mx-4 max-lg:border-b max-lg:border-line max-lg:px-4 max-lg:pb-3 lg:grid lg:gap-5">
+          {GROUPS.map(([group, tabs]) => (
+            <div key={group} className="grid shrink-0 content-start gap-0.5">
+              <span className="eyebrow mb-1 px-2.5 text-[11px]">{group}</span>
+              <div className="flex gap-0.5 lg:grid">
+                {tabs.map(([id, name]) => {
+                  const Icon = TOPIC_ICONS[id];
+                  const n = JOURNEY.findIndex(([j]) => j === id);
+                  return (
+                    <a
+                      key={id}
+                      href={`#${id}`}
+                      aria-current={tab === id ? "page" : undefined}
+                      className={`${LINK} inline-flex items-center gap-2 px-2.5 py-1.5 text-[14px] font-medium whitespace-nowrap text-muted hover:bg-surface hover:text-fg aria-[current=page]:bg-accent-soft aria-[current=page]:text-accent`}
+                    >
+                      {n >= 0 ? <span className="mono w-4 text-center text-[11px]">{n + 1}</span> : <Icon size={16} />}
+                      {name}
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
       </header>
-      {tab === "overview" && <Overview />}
-      {tab === "lifecycle" && <Lifecycle />}
-      {tab === "tokens" && <Tokens />}
-      {tab === "fraud" && <Fraud />}
-      {tab === "settlement" && <Settlement />}
-      {tab === "payouts" && <Payouts />}
-      {tab === "chargebacks" && <Chargebacks />}
-      {tab === "ledger" && <Ledger />}
-      {tab === "terms" && <Terms />}
-      {tab === "repo" && <RepoData />}
+      <main className="grid min-w-0 content-start gap-10">
+        {tab === "overview" && <Overview />}
+        {tab === "lifecycle" && <Lifecycle />}
+        {tab === "tokens" && <Tokens />}
+        {tab === "fraud" && <Fraud />}
+        {tab === "settlement" && <Settlement />}
+        {tab === "payouts" && <Payouts />}
+        {tab === "chargebacks" && <Chargebacks />}
+        {tab === "ledger" && <Ledger />}
+        {tab === "terms" && <Terms />}
+        {tab === "repo" && <RepoData />}
+        {step >= 0 && (
+          <nav aria-label="Journey" className="grid gap-3 border-t border-line pt-6 sm:grid-cols-2">
+            {prev && (
+              <a href={`#${prev[0]}`} className={`${LINK} panel group grid gap-0.5 text-fg hover:border-accent`}>
+                <span className="eyebrow inline-flex items-center gap-1">
+                  <ArrowLeft size={12} aria-hidden /> previous
+                </span>
+                <strong className="font-semibold">{prev[1]}</strong>
+              </a>
+            )}
+            {next && (
+              <a
+                href={`#${next[0]}`}
+                className={`${LINK} panel group grid gap-0.5 text-right text-fg hover:border-accent sm:col-start-2`}
+              >
+                <span className="eyebrow inline-flex items-center justify-end gap-1">
+                  next step {step + 2} <ArrowRight size={12} aria-hidden />
+                </span>
+                <strong className="font-semibold">{next[1]}</strong>
+              </a>
+            )}
+          </nav>
+        )}
+      </main>
     </div>
   );
 }
