@@ -213,3 +213,10 @@ button.act.alt .num { background: var(--accent); color: var(--surface); }
 .panel > .detail:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
 /* full-width diagram: wider gaps between phase columns leave room for arrows and their badges */
 .diagram .phases { column-gap: clamp(40px, 7vw, 88px); }
+
+/* icons */
+.tabs a { display: inline-flex; align-items: center; gap: 6px; }
+.actor svg { display: block; margin: 0 auto 4px; color: var(--muted); transition: color .25s; }
+.actor.on svg { color: var(--accent); }
+h2.with-icon { display: inline-flex; align-items: center; gap: 8px; }
+h2.with-icon svg { color: var(--accent); }

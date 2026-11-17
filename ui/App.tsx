@@ -6,6 +6,7 @@ import Chargebacks from "./chargebacks/Chargebacks";
 import Ledger from "./ledger/Ledger";
 import RepoData from "./repo/RepoData";
 import Terms from "./terms/Terms";
+import { TOPIC_ICONS } from "./shared/icons";
 
 const TABS = [
   ["lifecycle", "Payment lifecycle"],
@@ -34,9 +35,10 @@ export default function App() {
         <span className="eyebrow">fintech basics</span>
         <h1>How Card Payments Work</h1>
         <nav className="tabs">
-          {TABS.map(([id, name]) => (
-            <a key={id} href={`#${id}`} aria-current={tab === id ? "page" : undefined}>{name}</a>
-          ))}
+          {TABS.map(([id, name]) => {
+            const Icon = TOPIC_ICONS[id];
+            return <a key={id} href={`#${id}`} aria-current={tab === id ? "page" : undefined}><Icon size={16} />{name}</a>;
+          })}
         </nav>
       </header>
       {tab === "lifecycle" && <Lifecycle />}
