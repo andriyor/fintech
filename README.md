@@ -45,3 +45,41 @@ Amount of money an individual or entity receives after all deductions, such as t
 
 
 ![My figure](Untitled-1.excalidraw.png)
+
+## Interactive UI
+
+`ui/` is a small app that explains the concepts above by simulation: payment lifecycle, settlement, payouts,
+chargebacks and double-entry bookkeeping, plus the aggregates computed from `transactions/`.
+
+```sh
+pnpm install
+pnpm dev     # local dev server
+pnpm check   # self-checks for every model
+pnpm build   # static site in dist/
+```
+
+## Technical decisions
+
+- **Vite + React, no router or UI kit.** Tabs are switched by URL hash (`#settlement`); styling is one CSS file
+  with light/dark tokens. The app is a teaching tool, so fewer moving parts beat flexibility.
+- **One folder per tab.** Each of `ui/lifecycle`, `settlement`, `payouts`, `chargebacks`, `ledger` holds its
+  model, self-check and components; `ui/shared` holds what several tabs use (`Actors`, `Toggle`, `money`).
+- **Logic in plain `.ts` models, UI in components.** Models have no React code, so they run under Node directly
+  (type stripping) with no test framework or build step.
+- **Assert-based self-checks instead of a test suite.** Each `model.check.ts` asserts the invariants that make
+  the explanation true: money is conserved, debits equal credits, payouts reconcile to activity, fee splits add
+  up to the sale. `pnpm check` runs every `ui/**/*.check.ts` with Node's test runner.
+- **XState for the two flows that are state machines.** The payment lifecycle and the chargeback dispute are
+  XState v5 machines (`machine.ts`). The machine is the single source of rules: the UI renders only the events
+  `snapshot.can()` allows, guards decide outcomes (auto-capture, evidence wins the dispute), and locks such as
+  "scenario can't change once paid" are transitions the machine refuses. Because the rules are data, the
+  self-checks walk every reachable path and fail on an unreachable status, a dead end that isn't final, or
+  money created or lost. Trade-offs: ~14 KB gzipped, some typing ceremony, and terminal states are tagged
+  `final` rather than `type: "final"` so the actor keeps running and "Start over" works.
+- **Not everything is a machine.** Payouts derive their status from dates, settlement is a fixed stepper and
+  the ledger replays an event list into journal entries (event sourcing). Forcing those into XState would add
+  code without adding rules.
+- **Money in integers where totals must balance exactly.** The ledger works in cents; other models round to
+  cents at each step and assert totals within half a cent.
+- **Illustrative numbers.** Fees, interchange rates, reason codes and deadlines are simplified and labelled as
+  such in the UI; they explain the mechanics, not any one processor's pricing.
