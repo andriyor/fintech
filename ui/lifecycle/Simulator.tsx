@@ -11,7 +11,7 @@ const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 function ScenarioControls({ sc, set, locked }: { sc: Scenario; set: (s: Scenario) => void; locked: boolean }) {
   return (
-    <div className="panel controls" style={{ alignItems: "end" }}>
+    <div className="panel controls items-end">
       <label htmlFor="channel">Where the card is used
         <select id="channel" value={sc.channel} disabled={locked} onChange={e => set({ ...sc, channel: e.target.value as Scenario["channel"] })}>
           <option value="present">In store (card present)</option>
@@ -28,7 +28,7 @@ function ScenarioControls({ sc, set, locked }: { sc: Scenario; set: (s: Scenario
         <input id="amount" type="number" min={1} step={1} value={sc.amount} disabled={locked}
           onChange={e => set({ ...sc, amount: Math.max(1, Math.min(990, Math.round(+e.target.value * 100) / 100 || 1)) })} />
       </label>
-      <p className="note" style={{ margin: 0, maxWidth: "48ch" }}>
+      <p className="note m-0 max-w-[48ch]">
         {sc.mode === "auto"
           ? "Typical for a shop counter or a digital purchase: the sale is final the moment it's approved."
           : "Typical for hotels, car rentals and online stores that ship later: the merchant can capture less or void."}
@@ -95,7 +95,7 @@ export default function Simulator() {
             {(status || busy) && <button className="act alt" onClick={reset}>Start over</button>}
           </div>
           {history.length > 0 && (
-            <div className="path">path: {history.join(" → ")}{snap.hasTag("final") ? "  (final)" : ""}</div>
+            <div className="mt-2.5 font-mono text-[12px] text-muted wrap-anywhere">path: {history.join(" → ")}{snap.hasTag("final") ? "  (final)" : ""}</div>
           )}
         </div>
         <LedgerPanel ledger={ledger} changed={changed} authorized={history.includes("AUTHORIZED") ? scenario.amount : 0} captured={captured} />

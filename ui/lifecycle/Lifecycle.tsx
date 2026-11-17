@@ -4,7 +4,7 @@ export default function Lifecycle() {
   return (
     <>
       <section>
-        <div style={{ display: "grid", gap: 6 }}>
+        <div className="grid gap-1.5">
           <span className="eyebrow">from tap to merchant</span>
           <h2>The life of one card payment</h2>
           <p className="lede">

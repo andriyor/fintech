@@ -21,18 +21,19 @@ const pct = (v: number, of: number) => (of ? `${((v / of) * 100).toFixed(2)}%` :
 function Stages({ stage, setStage }: { stage: number; setStage: (n: number) => void }) {
   const s = STAGES[stage];
   return (
-    <div className="panel" style={{ display: "grid", gap: 14 }}>
-      <ol className="stages">
+    <div className="panel grid gap-3.5">
+      <ol className="m-0 grid list-none grid-cols-2 md:grid-cols-5 gap-1.5 p-0">
         {STAGES.map((x, i) => (
           <li key={x.name}>
-            <button aria-pressed={i === stage} className={i < stage ? "done" : ""} onClick={() => setStage(i)}>
-              <span className="mono">{x.when}</span>{x.name}
+            <button aria-pressed={i === stage} onClick={() => setStage(i)}
+              className={"grid w-full cursor-pointer gap-1 rounded-lg border border-line px-2.5 py-2 text-left text-[13px] font-semibold text-fg aria-pressed:border-accent aria-pressed:bg-accent-soft aria-pressed:text-accent " + (i < stage ? "bg-idle-soft" : "bg-transparent")}>
+              <span className="mono text-[11px] font-normal text-muted">{x.when}</span>{x.name}
             </button>
           </li>
         ))}
       </ol>
       <p>{s.text}</p>
-      <div className="actions" style={{ marginTop: 0 }}>
+      <div className="actions mt-0">
         <button className="act alt" disabled={stage === 0} onClick={() => setStage(stage - 1)}>Back</button>
         <button className="act" disabled={stage === STAGES.length - 1} onClick={() => setStage(stage + 1)}>
           {stage < STAGES.length - 1 ? `Next: ${STAGES[stage + 1].name}` : "Done"}
@@ -45,15 +46,15 @@ function Stages({ stage, setStage }: { stage: number; setStage: (n: number) => v
 function BatchTable({ stage, selected, select }: { stage: number; selected: number; select: (id: number) => void }) {
   const cleared = stage >= 2;
   return (
-    <div className="panel scroll">
-      <div className="eyebrow" style={{ marginBottom: 10 }}>Today's batch · click a row to see its fee split</div>
-      <table className="pick">
+    <div className="panel overflow-x-auto">
+      <div className="eyebrow mb-2.5">Today's batch · click a row to see its fee split</div>
+      <table className="[&_tbody_tr]:cursor-pointer [&_tbody_tr:hover]:bg-idle-soft [&_tbody_tr[aria-selected=true]]:bg-accent-soft [&_tbody_tr:focus-visible]:outline-2 [&_tbody_tr:focus-visible]:outline-accent">
         <thead><tr><th>Time</th><th>Card</th><th>Issuer</th><th className="n">Amount</th><th className="n">Interchange</th><th>Status</th></tr></thead>
         <tbody>
           {BATCH.map(t => (
             <tr key={t.id} aria-selected={t.id === selected} tabIndex={0} onClick={() => select(t.id)} onKeyDown={e => e.key === "Enter" && select(t.id)}>
               <td className="mono">{t.time}</td>
-              <td>{t.brand} {t.card}{t.refund && <span className="badge" style={{ ...toneOf("--bad"), marginLeft: 6 }}>REFUND</span>}</td>
+              <td>{t.brand} {t.card}{t.refund && <span className="badge ml-1.5" style={toneOf("--bad")}>REFUND</span>}</td>
               <td>{t.issuer}</td>
               <td className="n">{money(signed(t))}</td>
               <td className="n">{cleared ? money(t.refund ? -interchangeOf(t) : interchangeOf(t)) : <span className="note">at clearing</span>}</td>
@@ -68,7 +69,7 @@ function BatchTable({ stage, selected, select }: { stage: number; selected: numb
 
 function SplitBar({ s, total }: { s: Split; total: number }) {
   return (
-    <div className="stack" aria-hidden="true">
+    <div className="flex h-3.5 gap-0.5 overflow-hidden rounded-full bg-idle-soft mb-3.5 [&>i]:transition-[flex-grow] [&>i]:duration-400" aria-hidden="true">
       {PARTS.map(([k, , c]) => s[k] > 0 && <i key={k} style={{ flexGrow: s[k] / total, background: `var(${c})` }} />)}
     </div>
   );
@@ -80,19 +81,19 @@ function FeeSplit({ tx, pricing, setPricing }: { tx: Tx; pricing: Pricing; setPr
   const amount = Math.abs(signed(tx));
   const fees = amount - Math.abs(s.merchant);
   return (
-    <div className="panel" style={{ display: "grid", gap: 12, alignContent: "start" }}>
+    <div className="panel grid gap-3 content-start">
       <div className="eyebrow">Where {money(signed(tx))} goes</div>
       <Toggle label="Pricing" value={pricing} set={setPricing} options={[["icpp", "Interchange++"], ["blended", "Blended 2.9% + 30¢"]]} />
       {!tx.refund && <SplitBar s={s} total={amount} />}
       <div className="ledger">
         {PARTS.map(([k, name, c]) => (
           <div key={k} className="row">
-            <span><i className="dot" style={{ background: `var(${c})` }} />{name}</span>
+            <span><i className="mr-2 inline-block size-2 rounded-full align-middle" style={{ background: `var(${c})` }} />{name}</span>
             <span>{money(s[k])}</span>
           </div>
         ))}
       </div>
-      <p className="note" style={{ marginTop: 0 }}>
+      <p className="note mt-0">
         {tx.refund
           ? pricing === "icpp"
             ? "Refund: the issuer returns the interchange and interchange++ passes it back to the merchant."
@@ -114,13 +115,13 @@ function Netting({ stage }: { stage: number }) {
   if (stage < 3) {
     return (
       <div className="panel">
-        <div className="eyebrow" style={{ marginBottom: 8 }}>Net settlement</div>
+        <div className="eyebrow mb-2">Net settlement</div>
         <p className="lede">Appears at the settlement stage. Until then, records have moved but money hasn't.</p>
       </div>
     );
   }
   return (
-    <div className="panel scroll" style={{ display: "grid", gap: 12 }}>
+    <div className="panel overflow-x-auto grid gap-3">
       <div className="eyebrow">Net settlement · {BATCH.length} card transactions settle in {transfers} bank transfers</div>
       <table>
         <thead><tr><th>From</th><th>To</th><th className="n">Sales</th><th className="n">Net sales</th><th className="n">Kept</th><th className="n">Transfer</th></tr></thead>
@@ -132,14 +133,14 @@ function Netting({ stage }: { stage: number }) {
             </tr>
           ))}
           {p.networks.map(n => (
-            <tr key={n.brand} className="sum">
+            <tr key={n.brand} className="font-semibold [&>td]:border-t-2 [&>td]:border-t-line">
               <td>{n.brand}</td><td>Acquiring bank</td><td className="n"></td><td className="n">{money(n.received)}</td>
               <td className="n" title="scheme fee">{money(n.scheme)}</td><td className="n">{money(n.paysAcquirer)}</td>
             </tr>
           ))}
         </tbody>
       </table>
-      <p className="note" style={{ marginTop: 0 }}>
+      <p className="note mt-0">
         Each issuer keeps its interchange and sends one net amount per network; a refund in the same batch just lowers
         that amount. Each network keeps its scheme fee and sends one amount to the acquiring bank:{" "}
         <strong>{money(p.acquirerReceives)}</strong> in total. In reality each of those transfers also covers every
@@ -155,26 +156,26 @@ function Funding({ stage, pricing }: { stage: number; pricing: Pricing }) {
   const fees = Math.round((t.gross - t.merchant) * 100) / 100;
   const p = positions(BATCH);
   return (
-    <div className="panel" style={{ display: "grid", gap: 12, alignContent: "start" }}>
+    <div className="panel grid gap-3 content-start">
       <div className="eyebrow">Batch totals and funding</div>
       <div className="ledger">
         <div className="row"><span>Net sales (gross − refund)</span><span>{money(t.gross)}</span></div>
         {PARTS.slice(0, 3).map(([k, name]) => <div key={k} className="row"><span>− {name}</span><span>{money(-t[k])}</span></div>)}
-        <div className="row" style={{ fontWeight: 600 }}><span>Merchant's share</span><span>{money(t.merchant)}</span></div>
+        <div className="row font-semibold"><span>Merchant's share</span><span>{money(t.merchant)}</span></div>
         <div className="row"><span>Effective rate (fees ÷ net sales)</span><span>{pct(fees, t.gross)}</span></div>
       </div>
       {stage < 4 ? (
-        <p className="lede" style={{ fontSize: 14 }}>Funding happens at the last stage.</p>
+        <p className="lede text-[14px]">Funding happens at the last stage.</p>
       ) : (
         <>
           <Toggle label="Funding mode" value={mode} set={setMode} options={[["net", "Net (fees deducted daily)"], ["gross", "Gross (fees billed monthly)"]]} />
           <div className="ledger">
-            <div className="row" style={{ fontWeight: 600 }}><span>Deposit to merchant's bank today</span><span>{money(mode === "net" ? t.merchant : t.gross)}</span></div>
+            <div className="row font-semibold"><span>Deposit to merchant's bank today</span><span>{money(mode === "net" ? t.merchant : t.gross)}</span></div>
             {mode === "gross" && <div className="row"><span>Added to the monthly fee invoice</span><span>{money(-fees)}</span></div>}
             <div className="row"><span>Acquirer received from networks</span><span>{money(p.acquirerReceives)}</span></div>
             <div className="row"><span>Acquirer / processor keeps</span><span>{money(mode === "net" ? p.acquirerReceives - t.merchant : p.acquirerReceives - t.gross)}</span></div>
           </div>
-          <p className="note" style={{ marginTop: 0 }}>
+          <p className="note mt-0">
             {mode === "net"
               ? "Net funding: the deposit already has every fee taken out, so it reconciles to sales only through a fee report."
               : "Gross funding: the deposit equals net sales, which is easy to reconcile. The processor fronts the fees (it has paid out more than it received) and collects them with a monthly invoice."}
@@ -194,7 +195,7 @@ export default function Settlement() {
   return (
     <>
       <section>
-        <div style={{ display: "grid", gap: 6 }}>
+        <div className="grid gap-1.5">
           <span className="eyebrow">after capture, before payout</span>
           <h2>Clearing and settlement of one day's batch</h2>
           <p className="lede">

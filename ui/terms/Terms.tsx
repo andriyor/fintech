@@ -65,7 +65,7 @@ export default function Terms() {
   return (
     <>
       <section>
-        <div style={{ display: "grid", gap: 6 }}>
+        <div className="grid gap-1.5">
           <span className="eyebrow">glossary</span>
           <h2>Terms used in this app</h2>
           <p className="lede">Grouped by topic. Each group links to the tab where you can watch it happen.</p>
@@ -75,9 +75,9 @@ export default function Terms() {
         const Icon = TOPIC_ICONS[topic];
         return (
           <section key={title}>
-            <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}>
-              <h2 className="with-icon"><Icon size={20} />{title}</h2>
-              <a href={`#${tab}`} className="note" style={{ marginTop: 0 }}>see it in action →</a>
+            <div className="flex gap-3 items-baseline flex-wrap">
+              <h2 className="inline-flex items-center gap-2"><Icon size={20} className="text-accent" />{title}</h2>
+              <a href={`#${tab}`} className="note mt-0">see it in action →</a>
             </div>
             <dl className="panel">
               {terms.map(([term, def]) => <div key={term}><dt>{term}</dt><dd>{def}</dd></div>)}

@@ -26,12 +26,12 @@ function SumEverything() {
   return (
     <>
       <div><div className="eyebrow">sum of byStatus</div><div className="big">{money(sum)}</div></div>
-      <div className="callout">
+      <div className="rounded-r-md border-l-[3px] border-hold bg-hold-soft px-3 py-2 text-[14px]">
         This adds held, pending, voided and refunded orders together. Only the {money(captured)} captured order is
         actually the merchant's money.
       </div>
-      <div><div className="eyebrow" style={{ marginBottom: 4 }}>byStatus</div><Rows obj={r.byStatus} /></div>
-      <div><div className="eyebrow" style={{ marginBottom: 4 }}>bySource</div><Rows obj={r.bySource} /></div>
+      <div><div className="eyebrow mb-1">byStatus</div><Rows obj={r.byStatus} /></div>
+      <div><div className="eyebrow mb-1">bySource</div><Rows obj={r.bySource} /></div>
       <div className="row"><span>totalTip</span><span>{money(r.totalTip)}</span></div>
     </>
   );
@@ -48,7 +48,7 @@ function MoneyMoved() {
       <div><div className="eyebrow">gross payments</div><div className="big">{money(gross)}</div></div>
       <div className="row"><span>− refunds</span><span>{money(-refunds)}</span></div>
       <div className="row"><span>− fees (illustrative 2.15% + $0.10)</span><span>{money(-fees)}</span></div>
-      <div className="row" style={{ fontWeight: 600 }}><span>net payments</span><span>{money(gross - refunds - fees)}</span></div>
+      <div className="row font-semibold"><span>net payments</span><span>{money(gross - refunds - fees)}</span></div>
       <p className="note">
         Ignored: AUTHORIZED and PENDING (no money moved yet), VOIDED (hold released). A refund is assumed to reverse a
         sale captured in an earlier period, which is why net can go negative.
@@ -61,7 +61,7 @@ export default function RepoData() {
   const [mode, setMode] = useState<"all" | "real">("all");
   return (
     <section>
-      <div style={{ display: "grid", gap: 6 }}>
+      <div className="grid gap-1.5">
         <span className="eyebrow">report/single-pass.ts on transactions/*.json</span>
         <h2>What the repo's aggregate counts</h2>
         <p className="lede">
@@ -74,7 +74,7 @@ export default function RepoData() {
         <Toggle label="Counting mode" value={mode} set={setMode} options={[["all", "Sum every status"], ["real", "Money that moved"]]} />
       </div>
       <div className="cols">
-        <div className="panel scroll">
+        <div className="panel overflow-x-auto">
           <table>
             <thead>
               <tr><th>File</th><th>Status</th><th>Source</th><th className="n">Order</th><th className="n">Tip</th><th>Split</th></tr>
@@ -88,9 +88,9 @@ export default function RepoData() {
                   <td className="n">{t.amounts.order}</td>
                   <td className="n">{t.amounts.tip}</td>
                   <td>
-                    <div className="bar" style={{ width: `${(t.amounts.transaction / maxT) * 100}%` }} title={`order ${t.amounts.order} + tip ${t.amounts.tip}`}>
-                      <i style={{ width: `${(t.amounts.order / t.amounts.transaction) * 100}%`, background: "var(--accent)" }} />
-                      <i style={{ flex: 1, background: "var(--hold)" }} />
+                    <div className="flex h-2 min-w-15 overflow-hidden rounded bg-idle-soft" style={{ width: `${(t.amounts.transaction / maxT) * 100}%` }} title={`order ${t.amounts.order} + tip ${t.amounts.tip}`}>
+                      <i className="bg-accent" style={{ width: `${(t.amounts.order / t.amounts.transaction) * 100}%` }} />
+                      <i className="flex-1 bg-hold" />
                     </div>
                   </td>
                 </tr>
@@ -98,7 +98,7 @@ export default function RepoData() {
             </tbody>
           </table>
         </div>
-        <div className="panel" style={{ display: "grid", gap: 14 }}>
+        <div className="panel grid gap-3.5">
           {mode === "all" ? <SumEverything /> : <MoneyMoved />}
         </div>
       </div>

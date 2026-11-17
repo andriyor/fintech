@@ -48,18 +48,18 @@ function Controls({ s, set }: { s: Settings; set: (s: Settings) => void }) {
 
 function Calendar({ day, setDay, payouts }: { day: number; setDay: (d: number) => void; payouts: Payout[] }) {
   return (
-    <div className="cal" role="group" aria-label="Day">
+    <div className="grid grid-cols-4 md:grid-cols-7 gap-1.5" role="group" aria-label="Day">
       {Array.from({ length: DAYS }, (_, d) => {
         const sales = ACTIVITY.filter(a => a[0] === d).length;
         const created = payouts.find(p => p.created === d);
         const arrives = payouts.find(p => p.arrival === d);
         return (
-          <button key={d} aria-pressed={d === day} className={"cal-day" + (isBusinessDay(d) ? "" : " weekend")} onClick={() => setDay(d)}>
-            <span className="cal-date">{dayLabel(d)}</span>
-            <span className="cal-marks">
-              {sales > 0 && <i className="mk sale" title={`${sales} transaction(s)`}>{sales}</i>}
-              {created && <i className="mk out" title={`Payout #${created.id} created`}>#{created.id}↗</i>}
-              {arrives && <i className="mk in" title={`Payout #${arrives.id} arrives`}>#{arrives.id}✓</i>}
+          <button key={d} aria-pressed={d === day} className={"grid min-h-16 min-w-0 cursor-pointer content-start gap-1.5 rounded-lg border border-line p-2 text-left text-[12px] text-fg aria-pressed:border-accent aria-pressed:ring-2 aria-pressed:ring-accent " + (isBusinessDay(d) ? "bg-surface" : "bg-idle-soft")} onClick={() => setDay(d)}>
+            <span className="font-semibold">{dayLabel(d)}</span>
+            <span className="flex flex-wrap gap-0.5">
+              {sales > 0 && <i className="rounded px-1.5 font-mono text-[10px] font-semibold not-italic bg-idle-soft text-muted" title={`${sales} transaction(s)`}>{sales}</i>}
+              {created && <i className="rounded px-1.5 font-mono text-[10px] font-semibold not-italic bg-accent-soft text-accent" title={`Payout #${created.id} created`}>#{created.id}↗</i>}
+              {arrives && <i className="rounded px-1.5 font-mono text-[10px] font-semibold not-italic bg-ok-soft text-ok" title={`Payout #${arrives.id} arrives`}>#{arrives.id}✓</i>}
             </span>
           </button>
         );
@@ -72,16 +72,16 @@ function Buckets({ b }: { b: Balances }) {
   const total = BUCKETS.reduce((a, [k]) => a + Math.max(0, b[k]), 0) || 1;
   return (
     <div className="panel">
-      <div className="eyebrow" style={{ marginBottom: 10 }}>Where the merchant's net money is, end of day</div>
-      <div className="stack" aria-hidden="true">
+      <div className="eyebrow mb-2.5">Where the merchant's net money is, end of day</div>
+      <div className="flex h-3.5 gap-0.5 overflow-hidden rounded-full bg-idle-soft mb-3.5 [&>i]:transition-[flex-grow] [&>i]:duration-400" aria-hidden="true">
         {BUCKETS.map(([k, , , c]) => b[k] > 0 && <i key={k} style={{ flexGrow: b[k] / total, background: `var(${c})` }} />)}
       </div>
-      <div className="buckets">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {BUCKETS.map(([k, name, desc, c], i) => (
-          <div key={k} className="bucket">
+          <div key={k} className="grid min-w-0 content-start gap-1">
             <span className="eyebrow" style={{ color: `var(${c})` }}>{i > 0 ? "→ " : ""}{name}</span>
-            <span className="big">{money(b[k])}</span>
-            <small>{desc}</small>
+            <span className="big text-[20px]">{money(b[k])}</span>
+            <small className="text-[12px] text-muted">{desc}</small>
           </div>
         ))}
       </div>
@@ -118,17 +118,17 @@ function Reconciliation({ p, entries }: { p: Payout; entries: Entry[] }) {
     ["Reserve released", sum(e => e.type === "reserve_release", e => e.net)],
   ].filter(([, v]) => Math.abs(v as number) > 0.004) as [string, number][];
   return (
-    <div className="panel" style={{ display: "grid", gap: 14 }}>
+    <div className="panel grid gap-3.5">
       <div>
         <div className="eyebrow">Payout #{p.id} reconciliation</div>
         <p className="lede">Created {dayLabel(p.created)} at the cut-off, arrives {dayLabel(p.arrival)}. A payout is one bank transfer that bundles many balance entries, which is why it never matches a single sale.</p>
       </div>
       <div className="cols">
-        <div className="ledger" style={{ alignContent: "start" }}>
+        <div className="ledger content-start">
           {lines.map(([k, v]) => <div key={k} className="row"><span>{k}</span><span>{money(v)}</span></div>)}
-          <div className="row" style={{ fontWeight: 600 }}><span>Payout amount</span><span>{money(p.amount)}</span></div>
+          <div className="row font-semibold"><span>Payout amount</span><span>{money(p.amount)}</span></div>
         </div>
-        <div className="scroll"><EntryRows list={list} /></div>
+        <div className="overflow-x-auto"><EntryRows list={list} /></div>
       </div>
     </div>
   );
@@ -148,7 +148,7 @@ export default function Payouts() {
   return (
     <>
       <section>
-        <div style={{ display: "grid", gap: 6 }}>
+        <div className="grid gap-1.5">
           <span className="eyebrow">after settlement</span>
           <h2>From sale to bank deposit</h2>
           <p className="lede">
@@ -163,7 +163,7 @@ export default function Payouts() {
       </section>
 
       <section className="cols">
-        <div className="panel scroll" style={{ display: "grid", gap: 14, alignContent: "start" }}>
+        <div className="panel overflow-x-auto grid gap-3.5 content-start">
           <div className="eyebrow">{dayLabel(day)} · new balance entries</div>
           {today.length ? <EntryRows list={today} showAvail /> : <p className="lede">No sales or reversals today.</p>}
           {freed.length > 0 && (<>
@@ -171,23 +171,23 @@ export default function Payouts() {
             <EntryRows list={freed} />
           </>)}
         </div>
-        <div className="panel" style={{ display: "grid", gap: 10, alignContent: "start" }}>
+        <div className="panel grid gap-2.5 content-start">
           <div className="eyebrow">Payouts so far</div>
           {visible.length === 0 && <p className="lede">No payout yet. The first sales are still pending settlement.</p>}
           {visible.map(p => {
             const st = payoutStatus(p, day)!;
             return (
-              <button key={p.id} className="payout" aria-pressed={p.id === selected?.id} onClick={() => setPicked(p.id)}>
+              <button key={p.id} className="flex cursor-pointer flex-wrap items-center gap-2.5 rounded-lg border border-line bg-transparent px-2.5 py-2 text-left text-[14px] text-fg aria-pressed:border-accent aria-pressed:bg-accent-soft" aria-pressed={p.id === selected?.id} onClick={() => setPicked(p.id)}>
                 <span className="mono">#{p.id}</span>
                 <span className="badge" style={statusStyle(st)}>{st}</span>
-                <span className="note" style={{ margin: 0 }}>{dayLabel(p.created)} → {dayLabel(p.arrival)}</span>
-                <span className="mono" style={{ marginLeft: "auto" }}>{money(p.amount)}</span>
+                <span className="note m-0">{dayLabel(p.created)} → {dayLabel(p.arrival)}</span>
+                <span className="mono ml-auto">{money(p.amount)}</span>
               </button>
             );
           })}
           <div className="detail">
             {(Object.keys(STATUS) as PayoutStatus[]).map(s => (
-              <p key={s} style={{ fontSize: 13 }}><span className="badge" style={statusStyle(s)}>{s}</span> {STATUS[s][1]}</p>
+              <p key={s} className="text-[13px]"><span className="badge" style={statusStyle(s)}>{s}</span> {STATUS[s][1]}</p>
             ))}
           </div>
         </div>

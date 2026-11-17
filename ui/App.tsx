@@ -34,14 +34,14 @@ export default function App() {
   }, []);
 
   return (
-    <div className="wrap">
-      <header style={{ display: "grid", gap: 10 }}>
+    <div className="mx-auto grid max-w-[1120px] gap-10 pt-8 pb-16 pl-[max(16px,env(safe-area-inset-left,0px))] pr-[max(16px,env(safe-area-inset-right,0px))]">
+      <header className="grid gap-2.5">
         <span className="eyebrow">fintech basics</span>
         <h1>How Card Payments Work</h1>
-        <nav className="tabs">
+        <nav className="flex flex-wrap gap-1 border-b border-line">
           {TABS.map(([id, name]) => {
             const Icon = TOPIC_ICONS[id];
-            return <a key={id} href={`#${id}`} aria-current={tab === id ? "page" : undefined}><Icon size={16} />{name}</a>;
+            return <a key={id} className="px-3.5 py-2 -mb-px inline-flex items-center gap-1.5 font-medium text-muted no-underline border-b-2 border-transparent aria-[current=page]:text-accent aria-[current=page]:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" href={`#${id}`} aria-current={tab === id ? "page" : undefined}><Icon size={16} />{name}</a>;
           })}
         </nav>
       </header>

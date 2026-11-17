@@ -57,14 +57,14 @@ function Dispute() {
 
   return (
     <section>
-      <div className="panel controls" style={{ alignItems: "end" }}>
+      <div className="panel controls items-end">
         <label htmlFor="reason">Dispute reason
           <select id="reason" value={reasonId} disabled={!!status || busy} onChange={e => send({ type: "SET_REASON", reasonId: e.target.value })}>
             {REASONS.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
           </select>
         </label>
-        <div style={{ display: "grid", gap: 2, minWidth: 0 }}>
-          <span className="mono" style={{ fontSize: 12, color: "var(--muted)" }}>{reason.code}</span>
+        <div className="grid gap-0.5 min-w-0">
+          <span className="mono text-[12px] text-muted">{reason.code}</span>
           <span>{reason.story} Order: {money(ORDER)}, paid out to the merchant weeks ago.</span>
         </div>
       </div>
@@ -93,19 +93,19 @@ function Dispute() {
             {(status || busy) && <button className="act alt" onClick={reset}>Start over</button>}
           </div>
           {events.length > 0 && (
-            <ol className="timeline">
+            <ol className="m-0 mt-3.5 grid list-none gap-1.5 p-0 text-[13px] [&>li]:flex [&>li]:flex-wrap [&>li]:items-center [&>li]:gap-2.5 [&_li>.mono:first-child]:min-w-13 [&_li>.mono:first-child]:text-muted">
               {events.map((e, i) => (
                 <li key={i}><span className="mono">day {e.day}</span><span className="badge" style={statusTone(e.status)}>{e.status}</span><span>{e.label}</span></li>
               ))}
-              {status === "NEEDS_RESPONSE" && <li className="due"><span className="mono">day 7</span><span>Response deadline</span></li>}
+              {status === "NEEDS_RESPONSE" && <li className="text-hold"><span className="mono">day 7</span><span>Response deadline</span></li>}
               {snap.hasTag("final") && <li><span className="mono">final</span><span>Case closed{day !== null ? ` after ${day} days` : ""}.</span></li>}
             </ol>
           )}
         </div>
 
-        <div style={{ display: "grid", gap: 16, minWidth: 0 }}>
+        <div className="grid gap-4 min-w-0">
           <div className="panel">
-            <div className="eyebrow" style={{ marginBottom: 10 }}>Evidence to submit</div>
+            <div className="eyebrow mb-2.5">Evidence to submit</div>
             <div className="evidence">
               {reason.evidence.map(e => (
                 <label key={e.id} htmlFor={`ev-${e.id}`}>
@@ -115,16 +115,16 @@ function Dispute() {
               ))}
             </div>
             <p className="note">
-              Would win: <strong style={{ color: won ? "var(--ok)" : "var(--bad)" }}>{won ? "yes" : "no"}</strong>. {reason.tip}
+              Would win: <strong className={won ? "text-ok" : "text-bad"}>{won ? "yes" : "no"}</strong>. {reason.tip}
             </p>
           </div>
 
           <div className="panel">
-            <div className="eyebrow" style={{ marginBottom: 10 }}>Merchant's money</div>
+            <div className="eyebrow mb-2.5">Merchant's money</div>
             <div className="ledger">
-              {ledger.length === 0 && <p className="lede" style={{ fontSize: 14 }}>Nothing taken yet.</p>}
+              {ledger.length === 0 && <p className="lede text-[14px]">Nothing taken yet.</p>}
               {ledger.map((e, i) => <div key={i} className="row"><span>{e.label}</span><span>{money(e.amount)}</span></div>)}
-              <div className="row" style={{ fontWeight: 600 }}><span>Cost of this dispute</span><span>{money(total)}</span></div>
+              <div className="row font-semibold"><span>Cost of this dispute</span><span>{money(total)}</span></div>
               <div className="row"><span>If the merchant had refunded instead</span><span>{money(-ORDER)}</span></div>
             </div>
             <p className="note">
@@ -145,14 +145,14 @@ function RatioCalculator() {
   const [c, text] = ratioBand(ratio);
   return (
     <section>
-      <div style={{ display: "grid", gap: 6 }}>
+      <div className="grid gap-1.5">
         <h2>Chargeback ratio</h2>
         <p className="lede">
           Card networks track disputes ÷ transactions per month for every merchant. Won disputes still count. Above
           roughly 1%, the merchant enters a monitoring program.
         </p>
       </div>
-      <div className="panel" style={{ display: "grid", gap: 14 }}>
+      <div className="panel grid gap-3.5">
         <div className="controls">
           <label htmlFor="sales">Card transactions this month
             <input id="sales" type="number" min={0} value={sales} onChange={e => setSales(Math.max(0, +e.target.value))} />
@@ -161,11 +161,15 @@ function RatioCalculator() {
             <input id="disputes" type="number" min={0} value={disputes} onChange={e => setDisputes(Math.max(0, +e.target.value))} />
           </label>
         </div>
-        <div className="gauge" aria-hidden="true">
-          <i style={{ width: `${Math.min(ratio / 0.02, 1) * 100}%`, background: `var(${c})` }} />
-          {[0.005, 0.009, 0.015].map(t => <b key={t} style={{ left: `${(t / 0.02) * 100}%` }}><span>{(t * 100).toFixed(1)}%</span></b>)}
+        <div className="relative mt-1 mb-5 h-3 rounded-md bg-idle-soft" aria-hidden="true">
+          <i className="block h-full rounded-md transition-[width]" style={{ width: `${Math.min(ratio / 0.02, 1) * 100}%`, background: `var(${c})` }} />
+          {[0.005, 0.009, 0.015].map(t => (
+            <b key={t} className="absolute -inset-y-0.75 w-0.5 bg-muted" style={{ left: `${(t / 0.02) * 100}%` }}>
+              <span className="absolute top-5 -left-3 font-mono text-[11px] font-normal text-muted">{(t * 100).toFixed(1)}%</span>
+            </b>
+          ))}
         </div>
-        <div style={{ display: "flex", gap: 14, alignItems: "baseline", flexWrap: "wrap" }}>
+        <div className="flex gap-3.5 items-baseline flex-wrap">
           <span className="big" style={{ color: `var(${c})` }}>{(ratio * 100).toFixed(2)}%</span>
           <span>{text}</span>
         </div>
@@ -179,7 +183,7 @@ export default function Chargebacks() {
   return (
     <>
       <section>
-        <div style={{ display: "grid", gap: 6 }}>
+        <div className="grid gap-1.5">
           <span className="eyebrow">post-settlement</span>
           <h2>How a chargeback plays out</h2>
           <p className="lede">

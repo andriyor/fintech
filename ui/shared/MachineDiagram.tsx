@@ -87,7 +87,7 @@ export default function MachineDiagram({ graph, current, path, actions, label, h
         {graph.phases.map(phase => (
           <div className="phase" key={phase}>
             <h3>{phase}</h3>
-            {graph.nodes.some(n => n.key === graph.initial && n.phase === phase) && <i className="start-dot" data-key={START} title="start" />}
+            {graph.nodes.some(n => n.key === graph.initial && n.phase === phase) && <i className="inline-block size-3 rounded-full bg-fg ml-2.5 justify-self-start" data-key={START} title="start" />}
             {graph.nodes.filter(n => n.phase === phase).map(n => (
               <button
                 key={n.key}
@@ -121,11 +121,11 @@ export default function MachineDiagram({ graph, current, path, actions, label, h
           );
         })}
       </svg>
-      <p className="note legend">
-        <span><i className="start-dot" /> start</span>
+      <p className="note mt-3.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 [&>span]:inline-flex [&>span]:items-center [&>span]:gap-1.5">
+        <span><i className="inline-block size-2.5 rounded-full bg-fg" /> start</span>
         <span><svg width="26" height="8" aria-hidden="true"><path d="M0,4 H26" className="edge next" /></svg> can happen now (numbered like the buttons)</span>
         <span><svg width="26" height="8" aria-hidden="true"><path d="M0,4 H26" className="edge done" /></svg> taken</span>
-        <span><span className="state final" style={{ padding: "0 6px", cursor: "default" }}>&nbsp;</span> final</span>
+        <span><span className="state final px-1.5 py-0 cursor-default">&nbsp;</span> final</span>
       </p>
     </div>
   );

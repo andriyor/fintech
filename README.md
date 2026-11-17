@@ -68,18 +68,14 @@ pnpm report  # PDF of the aggregates in transactions/ (page.pdf); needs `pnpm ex
 
 ## Technical decisions
 
-- **Vite + React, no router or UI kit.** Tabs are switched by URL hash (`#settlement`); styling is one CSS file
-  with light/dark tokens. The app is a teaching tool, so fewer moving parts beat flexibility.
-- **One folder per tab.** Each of `ui/lifecycle`, `tokens`, `fraud`, `settlement`, `payouts`, `chargebacks`, `ledger` holds its
-  model, tests and components; `ui/terms` is the glossary; `ui/shared` holds what several tabs use (`Actors`,
-  `Toggle`, `MachineDiagram`, `money`, icons). The Repo data tab reuses the PDF report's types and
-  aggregate from `report/` instead of copying them.
-- **Logic in plain `.ts` models, UI in components.** Models have no React code, so they are tested without a
-  DOM and stay readable as the "rules" of each concept.
-- **Vitest for invariant tests.** Each `model.test.ts` asserts what makes the explanation true: money is
-  conserved, debits equal credits, payouts reconcile to activity, fee splits add up to the sale. Vitest reuses
-  the Vite config (same import resolution as the app), reports every failing case instead of stopping at the
-  first, and has a watch mode. Tests use `node:assert` so the failure messages read as the invariant.
+- **Vite + React, no router or UI kit.** Tabs are switched by URL hash (`#settlement`). The app is a teaching
+  tool, so fewer moving parts beat flexibility.
+- **Tailwind for one-off styling, CSS for shared building blocks.** Tailwind v4 (Vite plugin, no preflight)
+  styles anything a single tab uses, right in its markup. Its theme maps the app's color tokens (`bg-surface`,
+  `text-muted`…), so light/dark switching stays in CSS variables. `styles.css` keeps only what many tabs share
+  (panel, eyebrow, note, buttons, badges, tables, form controls) and the machine diagram, which reads better as
+  named CSS, in a `components` layer so a utility always overrides it. Inline `style` is left only for values
+  computed from data (widths, positions, tones). This halved `styles.css` (288 → 139 lines).
 - **XState for the two flows that are state machines.** The payment lifecycle and the chargeback dispute are
   XState v5 machines (`machine.ts`). The machine is the single source of rules: the UI renders only the events
   `snapshot.can()` allows, guards decide outcomes (auto-capture, evidence wins the dispute), and locks such as
