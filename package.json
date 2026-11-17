@@ -8,7 +8,9 @@
     "preview": "vite preview",
     "check": "vitest run",
     "test": "vitest",
-    "report": "tsx report/report.tsx"
+    "report": "tsx report/report.tsx",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "repository": {
     "type": "git",
@@ -36,6 +38,8 @@
     "@vitejs/plugin-react": "^6.3.0",
     "glob": "^11.0.1",
     "playwright": "^1.50.0",
+    "prettier": "^3.10.1",
+    "prettier-plugin-tailwindcss": "^0.8.1",
     "tailwindcss": "^4.3.5",
     "tsx": "^4.23.15",
     "vite": "^8.3.8",

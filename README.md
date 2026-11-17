@@ -43,7 +43,6 @@ Amount of money an individual or entity receives after all deductions, such as t
 
 [Payfac in 1,000 words - Matt Brown's Notes](https://notes.mtb.xyz/p/payfac-1000-words)
 
-
 ## Interactive UI
 
 `ui/` is a small app that explains the concepts above by simulation: payment lifecycle, tokenization, fraud and risk scoring,
@@ -55,16 +54,17 @@ pnpm install
 pnpm dev     # local dev server
 pnpm test    # model tests in watch mode
 pnpm check   # model tests once (CI)
+pnpm format  # format with Prettier (format:check for CI)
 pnpm build   # static site in dist/
 pnpm report  # PDF of the aggregates in transactions/ (page.pdf); needs `pnpm exec playwright install chromium` once
 ```
 
-| Path | What it is |
-|---|---|
-| `ui/` | The interactive app (Vite root), one folder per tab |
-| `report/` | The PDF report: transaction types, aggregates (`single-pass`, `multi-pass`) and the script |
-| `transactions/` | Sample transactions read by the report and the Repo data tab |
-| `docs/` | Images for this README |
+| Path            | What it is                                                                                 |
+| --------------- | ------------------------------------------------------------------------------------------ |
+| `ui/`           | The interactive app (Vite root), one folder per tab                                        |
+| `report/`       | The PDF report: transaction types, aggregates (`single-pass`, `multi-pass`) and the script |
+| `transactions/` | Sample transactions read by the report and the Repo data tab                               |
+| `docs/`         | Images for this README                                                                     |
 
 ## Technical decisions
 
@@ -75,7 +75,7 @@ pnpm report  # PDF of the aggregates in transactions/ (page.pdf); needs `pnpm ex
   `text-muted`…), so light/dark switching stays in CSS variables. `styles.css` keeps only what many tabs share
   (panel, eyebrow, note, buttons, badges, tables, form controls) and the machine diagram, which reads better as
   named CSS, in a `components` layer so a utility always overrides it. Inline `style` is left only for values
-  computed from data (widths, positions, tones). This halved `styles.css` (288 → 139 lines).
+  computed from data (widths, positions, tones). This roughly halved the hand-written CSS rules.
 - **XState for the two flows that are state machines.** The payment lifecycle and the chargeback dispute are
   XState v5 machines (`machine.ts`). The machine is the single source of rules: the UI renders only the events
   `snapshot.can()` allows, guards decide outcomes (auto-capture, evidence wins the dispute), and locks such as
@@ -120,5 +120,8 @@ pnpm report  # PDF of the aggregates in transactions/ (page.pdf); needs `pnpm ex
 - **File names that differ only by case are avoided.** macOS file systems are case-insensitive, so `actors.ts`
   next to `Actors.tsx` or `report.tsx` next to `Report.tsx` collide; such pairs get distinct names
   (`parties.ts`, `ReportView.tsx`).
+- **Prettier formats everything**, including Tailwind class order (`prettier-plugin-tailwindcss`, reading the
+  theme from `ui/styles.css`). The config keeps the existing style (double quotes, `x => …` without parentheses)
+  with a 120-character line. `pnpm format` writes, `pnpm format:check` is for CI.
 - **Illustrative numbers.** Fees, interchange rates, reason codes and deadlines are simplified and labelled as
   such in the UI; they explain the mechanics, not any one processor's pricing.
