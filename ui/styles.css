@@ -220,3 +220,19 @@ button.act.alt .num { background: var(--accent); color: var(--surface); }
 .actor.on svg { color: var(--accent); }
 h2.with-icon { display: inline-flex; align-items: center; gap: 8px; }
 h2.with-icon svg { color: var(--accent); }
+
+/* fraud & risk */
+.bands { position: relative; display: flex; height: 12px; border-radius: 6px; overflow: hidden; }
+.bands i { display: block; transition: width .3s; }
+.bands b { position: absolute; top: 0; bottom: 0; width: 3px; margin-left: -1.5px; background: var(--fg); transition: left .3s; }
+.hist { display: grid; gap: 4px; }
+.hist-plot { display: block; width: 100%; height: 200px; }
+.hbar.genuine { fill: var(--idle); }
+.hbar.fraud { fill: var(--bad); }
+.hist .axis { stroke: var(--muted); stroke-width: 1; }
+.hist .cutline { stroke: var(--fg); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.hist-label { font: 11px var(--mono); color: var(--muted); }
+.hist-axis { position: relative; height: 16px; font: 11px var(--mono); color: var(--muted); }
+.hist-axis span { position: absolute; transform: translateX(-50%); }
+.hist-axis span:first-child { transform: none; }
+input[type="range"] { display: block; width: 220px; accent-color: var(--accent); }

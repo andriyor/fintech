@@ -46,8 +46,8 @@ Amount of money an individual or entity receives after all deductions, such as t
 
 ## Interactive UI
 
-`ui/` is a small app that explains the concepts above by simulation: payment lifecycle, settlement, payouts,
-chargebacks and double-entry bookkeeping, a glossary of the terms they use, plus the aggregates computed from
+`ui/` is a small app that explains the concepts above by simulation: payment lifecycle, fraud and risk scoring,
+settlement, payouts, chargebacks and double-entry bookkeeping, a glossary of the terms they use, plus the aggregates computed from
 `transactions/`.
 
 ```sh
@@ -70,7 +70,7 @@ pnpm report  # PDF of the aggregates in transactions/ (page.pdf); needs `pnpm ex
 
 - **Vite + React, no router or UI kit.** Tabs are switched by URL hash (`#settlement`); styling is one CSS file
   with light/dark tokens. The app is a teaching tool, so fewer moving parts beat flexibility.
-- **One folder per tab.** Each of `ui/lifecycle`, `settlement`, `payouts`, `chargebacks`, `ledger` holds its
+- **One folder per tab.** Each of `ui/lifecycle`, `fraud`, `settlement`, `payouts`, `chargebacks`, `ledger` holds its
   model, tests and components; `ui/terms` is the glossary; `ui/shared` holds what several tabs use (`Actors`,
   `Toggle`, `MachineDiagram`, `money`, icons). The Repo data tab reuses the PDF report's types and
   aggregate from `report/` instead of copying them.
@@ -94,9 +94,13 @@ pnpm report  # PDF of the aggregates in transactions/ (page.pdf); needs `pnpm ex
   are numbered like their buttons (readable without hover, on touch screens too), and hovering a button or an
   arrow highlights the other and shows the full label. A diagram drawn by hand would drift from the rules; a
   graph-layout library would be heavier than the few phases each flow has.
-- **Not everything is a machine.** Payouts derive their status from dates, settlement is a fixed stepper and
-  the ledger replays an event list into journal entries (event sourcing). Forcing those into XState would add
+- **Not everything is a machine.** Payouts derive their status from dates, settlement is a fixed stepper,
+  the ledger replays an event list into journal entries (event sourcing) and fraud scoring is a pure function. Forcing those into XState would add
   code without adding rules.
+- **Explainable fraud scoring over a seeded sample.** The score is additive points (weighted by how much
+  likelier each signal is on fraud) rather than a model, so every point can be shown. The threshold trade-off
+  runs over 2,000 payments generated with a seeded PRNG from the same signal rates, so the numbers are the
+  same on every load and tests can assert them; challenge outcomes are expected values, not random draws.
 - **Money in integers where totals must balance exactly.** The ledger works in cents; other models round to
   cents at each step and assert totals within half a cent.
 - **One icon per topic.** Icons come from `lucide-react` (tree-shaken, decorative so `aria-hidden` next to a text

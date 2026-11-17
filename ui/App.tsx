@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Lifecycle from "./lifecycle/Lifecycle";
+import Fraud from "./fraud/Fraud";
 import Settlement from "./settlement/Settlement";
 import Payouts from "./payouts/Payouts";
 import Chargebacks from "./chargebacks/Chargebacks";
@@ -10,6 +11,7 @@ import { TOPIC_ICONS } from "./shared/icons";
 
 const TABS = [
   ["lifecycle", "Payment lifecycle"],
+  ["fraud", "Fraud & risk"],
   ["settlement", "Settlement"],
   ["payouts", "Payouts"],
   ["chargebacks", "Chargebacks"],
@@ -42,6 +44,7 @@ export default function App() {
         </nav>
       </header>
       {tab === "lifecycle" && <Lifecycle />}
+      {tab === "fraud" && <Fraud />}
       {tab === "settlement" && <Settlement />}
       {tab === "payouts" && <Payouts />}
       {tab === "chargebacks" && <Chargebacks />}

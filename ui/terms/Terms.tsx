@@ -17,6 +17,14 @@ const GROUPS: [string, string, string, [string, string][]][] = [
     ["Void vs refund", "A void cancels before capture, so only a hold is released and no money moves. A refund happens after settlement and sends money back."],
     ["3-D Secure", "An extra check by the issuer for online payments, such as confirming in the bank's app. It shifts fraud liability from the merchant to the issuer."],
   ]],
+  ["Fraud and risk", "fraud", "fraud", [
+    ["Risk score", "A number for how likely a payment is fraud, from signals such as velocity, location and address checks. Thresholds turn it into approve, challenge or decline."],
+    ["Velocity check", "Counting attempts per card, device or email in a short window. Many fast attempts with small amounts suggest card testing."],
+    ["AVS and CVV", "Checks by the issuer that the billing address and the 3-digit code match the card. A mismatch suggests the buyer doesn't hold the real card details."],
+    ["Step-up (challenge)", "Asking for 3-D Secure only on risky payments instead of all of them, so most customers see no extra step."],
+    ["Liability shift", "When a payment passes 3-D Secure, a later fraud chargeback is the issuer's loss, not the merchant's."],
+    ["False decline", "A genuine payment declined as fraud. The lost sale, and often the lost customer, can cost more than the fraud it prevents."],
+  ]],
   ["Clearing, settlement and fees", "settlement", "settlement", [
     ["Batch", "The day's captured sales, sent together at cut-off."],
     ["Clearing vs settlement", "Clearing is the exchange of transaction records after the batch closes: the issuer learns the final amount and posts the charge. Settlement is the money moving between banks afterwards, netted per bank."],
