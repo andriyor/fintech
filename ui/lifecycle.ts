@@ -5,7 +5,7 @@ export type LifecycleStatus =
   | "CAPTURED" | "VOIDED" | "EXPIRED" | "FAILED"
   | "SETTLED" | "REFUNDED" | "CHARGEBACK";
 
-export type Ledger = { avail: number; held: number; transit: number; merchant: number; fees: number };
+export type Ledger = { avail: number; held: number; merchant: number; fees: number };
 export type Hop = { route: string; text: string };
 export type Action = { label: string; to: LifecycleStatus; hops: Hop[]; apply: (l: Ledger) => Ledger };
 
@@ -35,11 +35,11 @@ export const STATES: Record<LifecycleStatus, [Tone, string]> = {
   PENDING: ["acc", "Card swiped, dipped or entered online. The request is on its way to the issuing bank and nothing is decided yet."],
   AUTHORIZED: ["hold", "The issuer approved and placed a hold. The money stays in the customer's account but can't be spent."],
   DECLINED: ["bad", "The issuer rejected it: insufficient funds, wrong card details or fraud detection. No funds are held."],
-  CAPTURED: ["ok", "The merchant asked to collect the authorized funds. The customer's account is debited and the transaction is marked for batch settlement."],
+  CAPTURED: ["ok", "The merchant asked to collect the authorized funds and the sale joined today's batch. The customer still only sees a hold: the charge is posted when the batch is cleared."],
   VOIDED: ["idle", "Cancelled before capture by the merchant or processor. No funds move and the hold is released."],
   EXPIRED: ["idle", "Not captured within the allowed window (typically 7 days). The authorization lapses and the hold is released."],
   FAILED: ["bad", "The capture attempt didn't go through: network issue, merchant processing error or bank rejection. The hold remains until it is retried or expires."],
-  SETTLED: ["ok", "Batch settlement moved the funds from the customer's bank to the merchant's account, minus fees."],
+  SETTLED: ["ok", "The batch was cleared (the issuer posted the charge to the cardholder) and settled (money moved from issuer to acquirer, minus fees). The merchant is paid out next."],
   REFUNDED: ["acc", "The merchant voluntarily returned the money to the customer. Processing fees are usually not given back."],
   CHARGEBACK: ["bad", "The customer disputed with their issuer, which pulls the funds back from the merchant until the dispute is resolved. The merchant also pays a fee."],
 };
@@ -58,19 +58,17 @@ const round = (v: number) => +v.toFixed(2);
 const TOTAL_FEES = round(T * 0.015 + T * 0.0015 + T * 0.005 + 0.1);
 const CHARGEBACK_FEE = 15;
 
-export const START: Ledger = { avail: 1000, held: 0, transit: 0, merchant: 0, fees: 0 };
+export const START: Ledger = { avail: 1000, held: 0, merchant: 0, fees: 0 };
 
 export const LEDGER_ROWS: [keyof Ledger, string, string][] = [
   ["avail", "Customer available", "spendable balance"],
-  ["held", "Customer on hold", "authorized, not spendable"],
-  ["transit", "In settlement", "debited, not yet paid out"],
+  ["held", "Customer on hold", "authorized; becomes a posted charge at clearing"],
   ["merchant", "Merchant account", "net after fees"],
   ["fees", "Fees taken", "issuer, network, processor"],
 ];
 
 const h = (route: string, text: string): Hop => ({ route, text });
 const release = (l: Ledger): Ledger => ({ ...l, avail: l.avail + l.held, held: 0 });
-const debit = (l: Ledger): Ledger => ({ ...l, held: 0, transit: T });
 
 /** Actions available from each status; "START" is before the card is used. */
 export const ACTIONS: Record<LifecycleStatus | "START", Action[]> = {
@@ -91,11 +89,9 @@ export const ACTIONS: Record<LifecycleStatus | "START", Action[]> = {
     ] },
   ],
   AUTHORIZED: [
-    { label: "Merchant captures", to: "CAPTURED", apply: debit, hops: [
+    { label: "Merchant captures", to: "CAPTURED", apply: l => l, hops: [
       h("merchant→processor", "Merchant sends a capture request for the authorized amount."),
-      h("processor→acquirer", "Processor forwards it to the acquiring bank."),
-      h("acquirer→network", "Acquirer confirms and queues the transaction for settlement."),
-      h("network→issuer", "Issuer debits the customer: the hold becomes a real charge."),
+      h("processor→acquirer", "The sale is added to the merchant's open batch for today. Nothing is sent to the issuer yet."),
     ] },
     { label: "Merchant voids", to: "VOIDED", apply: release, hops: [
       h("merchant→processor", "Merchant cancels the sale before capture."),
@@ -110,17 +106,18 @@ export const ACTIONS: Record<LifecycleStatus | "START", Action[]> = {
     ] },
   ],
   FAILED: [
-    { label: "Retry capture", to: "CAPTURED", apply: debit, hops: [
-      h("merchant→acquirer", "Merchant retries; the acquirer accepts and queues it for settlement."),
-      h("network→issuer", "Issuer debits the customer."),
+    { label: "Retry capture", to: "CAPTURED", apply: l => l, hops: [
+      h("merchant→acquirer", "Merchant retries; the sale is added to today's open batch."),
     ] },
     { label: "Give up (expires)", to: "EXPIRED", apply: release, hops: [
       h("issuer→customer", "The authorization window closes and the hold is released."),
     ] },
   ],
   CAPTURED: [
-    { label: "Run batch settlement", to: "SETTLED", apply: l => ({ ...l, transit: 0, merchant: round(T - TOTAL_FEES), fees: TOTAL_FEES }), hops: [
-      h("issuer→network", "End of day: issuer sends funds minus interchange to the network."),
+    { label: "Close batch (clear + settle)", to: "SETTLED", apply: l => ({ ...l, held: 0, merchant: round(T - TOTAL_FEES), fees: TOTAL_FEES }), hops: [
+      h("merchant→acquirer", "Cut-off: the merchant's batch closes and the acquirer sends clearing records to the network."),
+      h("network→issuer", "Clearing: the issuer receives the record and posts the $210 charge to the cardholder. The hold is gone."),
+      h("issuer→network", "Settlement: the issuer sends the funds minus interchange to the network."),
       h("network→acquirer", "Network takes its scheme fee and pays the acquiring bank."),
       h("acquirer→merchant", "Acquirer and processor take their cut and deposit the net amount."),
     ] },

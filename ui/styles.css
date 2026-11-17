@@ -139,3 +139,17 @@ input[type="number"] { font: 14px var(--mono); padding: 5px 8px; border-radius: 
 .gauge i { display: block; height: 100%; border-radius: 6px; transition: width .3s; }
 .gauge b { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--muted); }
 .gauge b span { position: absolute; top: 20px; left: -12px; font: 11px var(--mono); color: var(--muted); }
+
+/* settlement */
+.stages { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.stages button { width: 100%; display: grid; gap: 4px; text-align: left; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: var(--fg); font: 600 13px var(--text); cursor: pointer; }
+.stages button .mono { font-size: 11px; font-weight: 400; color: var(--muted); }
+.stages button.done { background: var(--idle-soft); }
+.stages button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.stages button:focus-visible, table.pick tr:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 760px) { .stages { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+table.pick tbody tr { cursor: pointer; }
+table.pick tbody tr:hover { background: var(--idle-soft); }
+table.pick tbody tr[aria-selected="true"] { background: var(--accent-soft); }
+tr.sum td { font-weight: 600; border-top: 2px solid var(--line); }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }

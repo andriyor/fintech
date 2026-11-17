@@ -4,9 +4,11 @@ import RepoData from "./components/RepoData";
 import Terms from "./components/Terms";
 import Payouts from "./components/Payouts";
 import Chargebacks from "./components/Chargebacks";
+import Settlement from "./components/Settlement";
 
 const TABS = [
   ["lifecycle", "Payment lifecycle"],
+  ["settlement", "Settlement"],
   ["payouts", "Payouts"],
   ["chargebacks", "Chargebacks"],
 ] as const;
@@ -46,6 +48,7 @@ export default function App() {
           <Terms />
         </>
       )}
+      {tab === "settlement" && <Settlement />}
       {tab === "payouts" && <Payouts />}
       {tab === "chargebacks" && <Chargebacks />}
     </div>
