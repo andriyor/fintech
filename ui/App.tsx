@@ -5,6 +5,7 @@ import Payouts from "./payouts/Payouts";
 import Chargebacks from "./chargebacks/Chargebacks";
 import Ledger from "./ledger/Ledger";
 import RepoData from "./repo/RepoData";
+import Terms from "./terms/Terms";
 
 const TABS = [
   ["lifecycle", "Payment lifecycle"],
@@ -12,6 +13,7 @@ const TABS = [
   ["payouts", "Payouts"],
   ["chargebacks", "Chargebacks"],
   ["ledger", "Double-entry ledger"],
+  ["terms", "Terms"],
   ["repo", "Repo data"],
 ] as const;
 type Tab = (typeof TABS)[number][0];
@@ -42,6 +44,7 @@ export default function App() {
       {tab === "payouts" && <Payouts />}
       {tab === "chargebacks" && <Chargebacks />}
       {tab === "ledger" && <Ledger />}
+      {tab === "terms" && <Terms />}
       {tab === "repo" && <RepoData />}
     </div>
   );

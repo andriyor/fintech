@@ -1,5 +1,4 @@
 import Simulator from "./Simulator";
-import Terms from "./Terms";
 
 export default function Lifecycle() {
   return (
@@ -16,7 +15,6 @@ export default function Lifecycle() {
         </div>
       </section>
       <Simulator />
-      <Terms />
     </>
   );
 }

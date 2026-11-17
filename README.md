@@ -49,7 +49,8 @@ Amount of money an individual or entity receives after all deductions, such as t
 ## Interactive UI
 
 `ui/` is a small app that explains the concepts above by simulation: payment lifecycle, settlement, payouts,
-chargebacks and double-entry bookkeeping, plus the aggregates computed from `transactions/`.
+chargebacks and double-entry bookkeeping, a glossary of the terms they use, plus the aggregates computed from
+`transactions/`.
 
 ```sh
 pnpm install
