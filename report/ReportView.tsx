@@ -8,7 +8,7 @@ type Resutl = {
   totalTip: number;
 };
 
-export default function App(props: { result: Resutl }) {
+export default function ReportView(props: { result: Resutl }) {
   return (
     <div>
       <div style={{ marginBottom: "12px" }}>
@@ -22,7 +22,7 @@ export default function App(props: { result: Resutl }) {
         <div>By source:</div>
         {Object.entries(props.result.bySource).map(([key, val]) => {
           return (
-            <div>
+            <div key={key}>
               {key}: {val}
             </div>
           );

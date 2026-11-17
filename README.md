@@ -1,6 +1,6 @@
 # Fintech basic
 
-<img src="basic.svg">
+<img src="docs/basic.svg">
 
 ## Terms
 
@@ -44,8 +44,6 @@ Amount of money an individual or entity receives after all deductions, such as t
 [Payfac in 1,000 words - Matt Brown's Notes](https://notes.mtb.xyz/p/payfac-1000-words)
 
 
-![My figure](Untitled-1.excalidraw.png)
-
 ## Interactive UI
 
 `ui/` is a small app that explains the concepts above by simulation: payment lifecycle, settlement, payouts,
@@ -58,7 +56,15 @@ pnpm dev     # local dev server
 pnpm test    # model tests in watch mode
 pnpm check   # model tests once (CI)
 pnpm build   # static site in dist/
+pnpm report  # PDF of the aggregates in transactions/ (page.pdf); needs `pnpm exec playwright install chromium` once
 ```
+
+| Path | What it is |
+|---|---|
+| `ui/` | The interactive app (Vite root), one folder per tab |
+| `report/` | The PDF report: transaction types, aggregates (`single-pass`, `multi-pass`) and the script |
+| `transactions/` | Sample transactions read by the report and the Repo data tab |
+| `docs/` | Images for this README |
 
 ## Technical decisions
 
@@ -66,7 +72,8 @@ pnpm build   # static site in dist/
   with light/dark tokens. The app is a teaching tool, so fewer moving parts beat flexibility.
 - **One folder per tab.** Each of `ui/lifecycle`, `settlement`, `payouts`, `chargebacks`, `ledger` holds its
   model, tests and components; `ui/terms` is the glossary; `ui/shared` holds what several tabs use (`Actors`,
-  `Toggle`, `MachineDiagram`, `money`, icons).
+  `Toggle`, `MachineDiagram`, `money`, icons). The Repo data tab reuses the PDF report's types and
+  aggregate from `report/` instead of copying them.
 - **Logic in plain `.ts` models, UI in components.** Models have no React code, so they are tested without a
   DOM and stay readable as the "rules" of each concept.
 - **Vitest for invariant tests.** Each `model.test.ts` asserts what makes the explanation true: money is

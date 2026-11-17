@@ -1,0 +1,2 @@
+allowBuilds:
+  esbuild: true # tsx depends on it; the script only verifies its platform binary

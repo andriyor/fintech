@@ -1,14 +1,14 @@
 {
   "name": "fintech",
   "version": "1.0.0",
-  "description": "<img src=\"basic.svg\">",
-  "main": "index.js",
+  "description": "Interactive explainer of how card payments work",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "check": "vitest run",
-    "test": "vitest"
+    "test": "vitest",
+    "report": "tsx report/report.tsx"
   },
   "repository": {
     "type": "git",
@@ -23,20 +23,19 @@
   "homepage": "https://github.com/andriyor/fintech#readme",
   "dependencies": {
     "@xstate/react": "^6.1.0",
-    "glob": "^11.0.1",
-    "lodash": "^4.17.21",
     "lucide-react": "^1.73.0",
-    "playwright": "^1.50.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "xstate": "^5.33.4"
   },
   "devDependencies": {
-    "@types/lodash": "^4.17.15",
     "@types/node": "^22.12.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.3.0",
+    "glob": "^11.0.1",
+    "playwright": "^1.50.0",
+    "tsx": "^4.23.15",
     "vite": "^8.3.8",
     "vitest": "^5.1.0"
   }

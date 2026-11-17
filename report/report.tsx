@@ -5,10 +5,10 @@ import { chromium } from "playwright";
 import { renderToString } from "react-dom/server";
 import React from "react";
 
-import App from "./App";
+import ReportView from "./ReportView";
 import { Transaction } from "./types";
 // import { aggregate } from "./multi-pass";
-import { aggregate } from "./utils/single-pass";
+import { aggregate } from "./single-pass";
 
 
 (async () => {
@@ -23,15 +23,18 @@ import { aggregate } from "./utils/single-pass";
   const result = aggregate(transactions);
   console.log("result", result);
 
-  const browser = await chromium.launch({ headless: false });
+  // Headless (PDF export needs it) on the full Chromium build, so `playwright install chromium` is the only setup.
+  const browser = await chromium.launch({ channel: "chromium" });
   const page = await browser.newPage();
 
   const htmlContent = renderToString(
-    <App result={result} />
+    <ReportView result={result} />
   );
 
   await page.setContent(htmlContent);
 
   await page.emulateMedia({ media: "screen" });
   await page.pdf({ path: "page.pdf" });
+  await browser.close();
+  console.log("wrote page.pdf");
 })();

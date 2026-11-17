@@ -1,6 +1,6 @@
 import { useState } from "react";
-import type { Transaction } from "../../src/types";
-import { aggregate } from "../../src/utils/single-pass";
+import type { Transaction } from "../../report/types";
+import { aggregate } from "../../report/single-pass";
 import { money } from "../shared/money";
 import Badge from "../lifecycle/Badge";
 import Toggle from "../shared/Toggle";
@@ -62,7 +62,7 @@ export default function RepoData() {
   return (
     <section>
       <div style={{ display: "grid", gap: 6 }}>
-        <span className="eyebrow">src/utils/single-pass.ts on transactions/*.json</span>
+        <span className="eyebrow">report/single-pass.ts on transactions/*.json</span>
         <h2>What the repo's aggregate counts</h2>
         <p className="lede">
           The sample files in <code className="mono">transactions/</code>. <code className="mono">aggregate()</code> sums{" "}
