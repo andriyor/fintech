@@ -9,7 +9,8 @@ describe("payouts", () => {
   });
 
   const settings = (["daily", "weekly"] as const).flatMap(schedule =>
-    [0, 0.1].flatMap(reservePct => [1, 2, 7].map(delay => ({ delay, schedule, reservePct, reserveDays: 7 }))));
+    [0, 0.1].flatMap(reservePct => [1, 2, 7].map(delay => ({ delay, schedule, reservePct, reserveDays: 7 }))),
+  );
 
   it.each(settings)("every dollar is in exactly one bucket ($schedule, T+$delay, reserve $reservePct)", s => {
     const { entries, payouts } = simulate(s);

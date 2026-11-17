@@ -35,7 +35,12 @@ function explore(sc: Scenario) {
 describe("payment lifecycle machine", () => {
   it("reaches every status, conserves money and has no dead ends (separate capture)", () => {
     const seen = explore({ amount: 100, channel: "online", mode: "separate" });
-    assert.deepEqual([...seen].filter(s => s !== "START").sort(), graphOf(paymentMachine).nodes.map(n => n.key).sort());
+    assert.deepEqual(
+      [...seen].filter(s => s !== "START").sort(),
+      graphOf(paymentMachine)
+        .nodes.map(n => n.key)
+        .sort(),
+    );
   });
 
   it("never stops at AUTHORIZED with automatic capture", () => {
@@ -50,14 +55,32 @@ describe("payment lifecycle machine", () => {
     assert.equal(g.initial, "PENDING");
     assert.deepEqual(g.phases, ["1 · Authorization", "2 · Capture", "3 · Settlement", "4 · Post-settlement"]);
     assert.deepEqual(g.nodes.map(n => n.key).sort(), Object.keys(STATES).sort(), "every status has a description");
-    assert.ok(g.nodes.every(n => n.phase), "every state has a phase");
+    assert.ok(
+      g.nodes.every(n => n.phase),
+      "every state has a phase",
+    );
     const capture = g.edges.find(e => e.from === "AUTHORIZED" && e.to === "CAPTURED")!;
-    assert.deepEqual(capture.events.sort(), ["CAPTURE", "CAPTURE_PARTIAL", "always"].sort(), "one arrow carries every event between two states");
-    assert.deepEqual(g.nodes.filter(n => n.final).map(n => n.key).sort(), ["CHARGEBACK", "DECLINED", "EXPIRED", "REFUNDED", "VOIDED"]);
+    assert.deepEqual(
+      capture.events.sort(),
+      ["CAPTURE", "CAPTURE_PARTIAL", "always"].sort(),
+      "one arrow carries every event between two states",
+    );
+    assert.deepEqual(
+      g.nodes
+        .filter(n => n.final)
+        .map(n => n.key)
+        .sort(),
+      ["CHARGEBACK", "DECLINED", "EXPIRED", "REFUNDED", "VOIDED"],
+    );
   });
 
   it("releases the uncaptured part of the hold on a partial capture", () => {
-    const s = play({ amount: 100, channel: "online", mode: "separate" }, ["PAY", "APPROVE", "CAPTURE_PARTIAL", "CLOSE_BATCH"]);
+    const s = play({ amount: 100, channel: "online", mode: "separate" }, [
+      "PAY",
+      "APPROVE",
+      "CAPTURE_PARTIAL",
+      "CLOSE_BATCH",
+    ]);
     assert.equal(s.context.captured, 100 * PARTIAL);
     assert.equal(s.context.ledger.avail, 1000 - 80);
     assert.equal(s.context.ledger.merchant, Math.round((80 - feeOn(80)) * 100) / 100);

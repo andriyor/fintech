@@ -17,7 +17,11 @@ describe("settlement", () => {
   it("conserves money along the settlement chain", () => {
     const p = positions(BATCH);
     const icpp = totals(BATCH, "icpp");
-    near(p.issuers.reduce((a, i) => a + i.pays, 0), icpp.gross - icpp.interchange, "issuers pay gross minus interchange");
+    near(
+      p.issuers.reduce((a, i) => a + i.pays, 0),
+      icpp.gross - icpp.interchange,
+      "issuers pay gross minus interchange",
+    );
     near(p.acquirerReceives, icpp.gross - icpp.interchange - icpp.scheme, "acquirer receives after scheme fees");
     near(p.acquirerReceives, icpp.processor + icpp.merchant, "acquirer funds the merchant and keeps the markup");
     const blended = totals(BATCH, "blended");

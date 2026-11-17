@@ -14,10 +14,19 @@ describe("double-entry ledger", () => {
   it.each(paths.map(p => [p.join(" → "), p] as const))("keeps the books balanced: %s", (_, path) => {
     for (let i = 1; i <= path.length; i++) {
       const events = path.slice(0, i);
-      assert.equal(available(events.slice(0, -1))[events.at(-1)!], null, `${events.at(-1)} allowed after ${events.slice(0, -1)}`);
+      assert.equal(
+        available(events.slice(0, -1))[events.at(-1)!],
+        null,
+        `${events.at(-1)} allowed after ${events.slice(0, -1)}`,
+      );
       const entries = post(events);
-      for (const e of entries) for (const book of BOOKS)
-        assert.equal(total(e.lines[book], "dr"), total(e.lines[book], "cr"), `entry ${e.n} balances in ${book} books`);
+      for (const e of entries)
+        for (const book of BOOKS)
+          assert.equal(
+            total(e.lines[book], "dr"),
+            total(e.lines[book], "cr"),
+            `entry ${e.n} balances in ${book} books`,
+          );
       const b = balances(entries);
       for (const book of BOOKS) {
         const q = equation(book, b);

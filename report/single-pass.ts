@@ -15,6 +15,6 @@ export const aggregate = (transactions: Transaction[]) => {
 
       return acc;
     },
-    { byStatus: {}, bySource: {}, totalTip: 0 }
+    { byStatus: {}, bySource: {}, totalTip: 0 },
   );
 };

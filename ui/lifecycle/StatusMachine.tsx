@@ -18,7 +18,20 @@ type Props = {
 };
 
 export default function StatusMachine({ current, history, actions, label, hot, onHot, peek, onPeek }: Props) {
-  return <MachineDiagram graph={GRAPH} current={current} path={history} actions={actions} label={label} hot={hot} onHot={onHot} tone={tone} peek={peek} onPeek={k => onPeek(k as LifecycleStatus)} />;
+  return (
+    <MachineDiagram
+      graph={GRAPH}
+      current={current}
+      path={history}
+      actions={actions}
+      label={label}
+      hot={hot}
+      onHot={onHot}
+      tone={tone}
+      peek={peek}
+      onPeek={k => onPeek(k as LifecycleStatus)}
+    />
+  );
 }
 
 /** What the current (or clicked) status means. */
@@ -26,17 +39,17 @@ export function StatusDetail({ current, peek }: { current: LifecycleStatus | nul
   const shown = peek ?? current;
   return (
     <div className="detail">
-        {shown ? (
-          <>
-            <div>
-              <Badge status={shown} />
-              {peek && peek !== current && <span className="note"> (reading only — not the current status)</span>}
-            </div>
-            <p>{STATES[shown][1]}</p>
-          </>
-        ) : (
-          <p className="lede">No payment yet. Choose a scenario, then pay.</p>
-        )}
+      {shown ? (
+        <>
+          <div>
+            <Badge status={shown} />
+            {peek && peek !== current && <span className="note"> (reading only — not the current status)</span>}
+          </div>
+          <p>{STATES[shown][1]}</p>
+        </>
+      ) : (
+        <p className="lede">No payment yet. Choose a scenario, then pay.</p>
+      )}
     </div>
   );
 }

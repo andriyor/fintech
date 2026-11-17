@@ -27,8 +27,13 @@ describe("dispute evidence", () => {
   });
 
   it("offers every evidence item a winning set needs", () => {
-    for (const r of REASONS) for (const set of r.winsWith) for (const id of set)
-      assert.ok(r.evidence.some(e => e.id === id), `${r.id}: ${id} is selectable`);
+    for (const r of REASONS)
+      for (const set of r.winsWith)
+        for (const id of set)
+          assert.ok(
+            r.evidence.some(e => e.id === id),
+            `${r.id}: ${id} is selectable`,
+          );
   });
 });
 
@@ -43,26 +48,48 @@ describe("dispute machine", () => {
         if (node) seen.add(node);
         const next = EVENTS.filter(type => snap.can({ type }));
         assert.equal(next.length === 0, snap.hasTag("final"), `${snap.value}: only final states are dead ends`);
-        if (!next.length) assert.ok(cost >= -ORDER - DISPUTE_FEE - ARBITRATION_FEE, `${path} costs at most order + both fees`);
+        if (!next.length)
+          assert.ok(cost >= -ORDER - DISPUTE_FEE - ARBITRATION_FEE, `${path} costs at most order + both fees`);
         for (const type of next) queue.push([...path, type]);
       }
     }
-    assert.deepEqual([...seen].sort(), graphOf(disputeMachine).nodes.map(n => n.key).sort());
+    assert.deepEqual(
+      [...seen].sort(),
+      graphOf(disputeMachine)
+        .nodes.map(n => n.key)
+        .sort(),
+    );
   });
 
   it("draws two cycles, with arbitration's win as its own final state", () => {
     const g = graphOf(disputeMachine);
     assert.equal(g.initial, "NEEDS_RESPONSE");
-    assert.ok(g.nodes.every(n => n.phase && n.status in STATUS_INFO), "every state has a phase and a description");
-    assert.deepEqual(g.nodes.find(n => n.key === "WON_FINAL"), { key: "WON_FINAL", phase: "4 · Second cycle", label: "WON", status: "WON", final: true });
-    assert.deepEqual(g.edges.find(e => e.from === "NEEDS_RESPONSE" && e.to === "LOST")!.events, ["ACCEPT", "MISS_DEADLINE"]);
+    assert.ok(
+      g.nodes.every(n => n.phase && n.status in STATUS_INFO),
+      "every state has a phase and a description",
+    );
+    assert.deepEqual(
+      g.nodes.find(n => n.key === "WON_FINAL"),
+      { key: "WON_FINAL", phase: "4 · Second cycle", label: "WON", status: "WON", final: true },
+    );
+    assert.deepEqual(g.edges.find(e => e.from === "NEEDS_RESPONSE" && e.to === "LOST")!.events, [
+      "ACCEPT",
+      "MISS_DEADLINE",
+    ]);
     assert.ok(!g.edges.some(e => e.from === "WON_FINAL"), "nothing leaves a final state");
   });
 
   it("charges the merchant what each outcome costs", () => {
     assert.equal(play([], ["DISPUTE", "ACCEPT"]).cost, -ORDER - DISPUTE_FEE);
-    assert.equal(play(["3ds"], ["DISPUTE", "SUBMIT", "ISSUER_DECIDES"]).cost, -DISPUTE_FEE, "a win returns the order but not the fee");
-    assert.equal(play(["3ds"], ["DISPUTE", "SUBMIT", "ISSUER_DECIDES", "PRE_ARB", "ESCALATE", "NETWORK_RULES"]).cost, -DISPUTE_FEE);
+    assert.equal(
+      play(["3ds"], ["DISPUTE", "SUBMIT", "ISSUER_DECIDES"]).cost,
+      -DISPUTE_FEE,
+      "a win returns the order but not the fee",
+    );
+    assert.equal(
+      play(["3ds"], ["DISPUTE", "SUBMIT", "ISSUER_DECIDES", "PRE_ARB", "ESCALATE", "NETWORK_RULES"]).cost,
+      -DISPUTE_FEE,
+    );
   });
 
   it("ends after a lost first cycle", () => {
@@ -77,9 +104,15 @@ describe("dispute machine", () => {
     for (const type of ["DISPUTE", "SUBMIT", "ISSUER_DECIDES", "PRE_ARB"] as const) actor.send({ type });
     actor.send({ type: "TOGGLE_EVIDENCE", id: "3ds" });
     actor.send({ type: "ESCALATE" });
-    assert.ok(!actor.getSnapshot().can({ type: "TOGGLE_EVIDENCE", id: "3ds" }), "evidence is locked during arbitration");
+    assert.ok(
+      !actor.getSnapshot().can({ type: "TOGGLE_EVIDENCE", id: "3ds" }),
+      "evidence is locked during arbitration",
+    );
     actor.send({ type: "NETWORK_RULES" });
-    assert.equal(actor.getSnapshot().context.entries.reduce((a, e) => a + e.amount, 0), -ORDER - DISPUTE_FEE - ARBITRATION_FEE);
+    assert.equal(
+      actor.getSnapshot().context.entries.reduce((a, e) => a + e.amount, 0),
+      -ORDER - DISPUTE_FEE - ARBITRATION_FEE,
+    );
     actor.send({ type: "RESET" });
     assert.equal(actor.getSnapshot().value, "START");
     assert.deepEqual(actor.getSnapshot().context.entries, []);

@@ -2,18 +2,14 @@ import { Transaction } from "./types";
 
 const amountByStatus = (transactions: Transaction[]) => {
   return transactions.reduce((acc, curr) => {
-    acc[curr.status] = acc[curr.status]
-      ? acc[curr.status] + curr.amounts.order
-      : curr.amounts.order;
+    acc[curr.status] = acc[curr.status] ? acc[curr.status] + curr.amounts.order : curr.amounts.order;
     return acc;
   }, {});
 };
 
 const amountBySource = (transactions: Transaction[]) => {
   return transactions.reduce((acc, curr) => {
-    acc[curr.source] = acc[curr.source]
-      ? acc[curr.source] + curr.amounts.order
-      : curr.amounts.order;
+    acc[curr.source] = acc[curr.source] ? acc[curr.source] + curr.amounts.order : curr.amounts.order;
     return acc;
   }, {});
 };

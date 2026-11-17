@@ -1,8 +1,18 @@
 import { useMemo, useState, type CSSProperties } from "react";
 import { money } from "../shared/money";
 import {
-  ACTIVITY, DAYS, balancesOn, dayLabel, isBusinessDay, payoutStatus, simulate,
-  type Balances, type Entry, type Payout, type PayoutStatus, type Settings,
+  ACTIVITY,
+  DAYS,
+  balancesOn,
+  dayLabel,
+  isBusinessDay,
+  payoutStatus,
+  simulate,
+  type Balances,
+  type Entry,
+  type Payout,
+  type PayoutStatus,
+  type Settings,
 } from "./model";
 
 const BUCKETS: [keyof Balances, string, string, string][] = [
@@ -16,30 +26,50 @@ const BUCKETS: [keyof Balances, string, string, string][] = [
 const STATUS: Record<PayoutStatus, [string, string]> = {
   PENDING: ["--idle", "Created at the cut-off; amount is fixed, transfer not sent yet."],
   IN_TRANSIT: ["--hold", "Submitted to the bank network (ACH). Usually 1 business day."],
-  PAID: ["--ok", "Deposited. If the bank rejects it (closed account, wrong number) it becomes FAILED and the money returns to the balance."],
+  PAID: [
+    "--ok",
+    "Deposited. If the bank rejects it (closed account, wrong number) it becomes FAILED and the money returns to the balance.",
+  ],
 };
-const statusStyle = (s: PayoutStatus) => ({ "--c": `var(${STATUS[s][0]})`, "--cs": `var(${STATUS[s][0]}-soft)` }) as CSSProperties;
+const statusStyle = (s: PayoutStatus) =>
+  ({ "--c": `var(${STATUS[s][0]})`, "--cs": `var(${STATUS[s][0]}-soft)` }) as CSSProperties;
 
 const TYPE_LABEL: Record<Entry["type"], string> = {
-  charge: "charge", refund: "refund", chargeback: "chargeback", reserve_hold: "reserve held", reserve_release: "reserve released",
+  charge: "charge",
+  refund: "refund",
+  chargeback: "chargeback",
+  reserve_hold: "reserve held",
+  reserve_release: "reserve released",
 };
 
 function Controls({ s, set }: { s: Settings; set: (s: Settings) => void }) {
   return (
     <div className="panel controls">
-      <label htmlFor="delay">Settlement delay
+      <label htmlFor="delay">
+        Settlement delay
         <select id="delay" value={s.delay} onChange={e => set({ ...s, delay: +e.target.value })}>
-          <option value={1}>T+1</option><option value={2}>T+2 (typical)</option><option value={7}>T+7 (new account)</option>
+          <option value={1}>T+1</option>
+          <option value={2}>T+2 (typical)</option>
+          <option value={7}>T+7 (new account)</option>
         </select>
       </label>
-      <label htmlFor="schedule">Payout schedule
-        <select id="schedule" value={s.schedule} onChange={e => set({ ...s, schedule: e.target.value as Settings["schedule"] })}>
-          <option value="daily">Daily (business days)</option><option value="weekly">Weekly (Fridays)</option>
+      <label htmlFor="schedule">
+        Payout schedule
+        <select
+          id="schedule"
+          value={s.schedule}
+          onChange={e => set({ ...s, schedule: e.target.value as Settings["schedule"] })}
+        >
+          <option value="daily">Daily (business days)</option>
+          <option value="weekly">Weekly (Fridays)</option>
         </select>
       </label>
-      <label htmlFor="reserve">Rolling reserve
+      <label htmlFor="reserve">
+        Rolling reserve
         <select id="reserve" value={s.reservePct} onChange={e => set({ ...s, reservePct: +e.target.value })}>
-          <option value={0}>None</option><option value={0.1}>10% for 7 days</option><option value={0.25}>25% for 7 days (risky merchant)</option>
+          <option value={0}>None</option>
+          <option value={0.1}>10% for 7 days</option>
+          <option value={0.25}>25% for 7 days (risky merchant)</option>
         </select>
       </label>
     </div>
@@ -48,18 +78,47 @@ function Controls({ s, set }: { s: Settings; set: (s: Settings) => void }) {
 
 function Calendar({ day, setDay, payouts }: { day: number; setDay: (d: number) => void; payouts: Payout[] }) {
   return (
-    <div className="grid grid-cols-4 md:grid-cols-7 gap-1.5" role="group" aria-label="Day">
+    <div className="grid grid-cols-4 gap-1.5 md:grid-cols-7" role="group" aria-label="Day">
       {Array.from({ length: DAYS }, (_, d) => {
         const sales = ACTIVITY.filter(a => a[0] === d).length;
         const created = payouts.find(p => p.created === d);
         const arrives = payouts.find(p => p.arrival === d);
         return (
-          <button key={d} aria-pressed={d === day} className={"grid min-h-16 min-w-0 cursor-pointer content-start gap-1.5 rounded-lg border border-line p-2 text-left text-[12px] text-fg aria-pressed:border-accent aria-pressed:ring-2 aria-pressed:ring-accent " + (isBusinessDay(d) ? "bg-surface" : "bg-idle-soft")} onClick={() => setDay(d)}>
+          <button
+            key={d}
+            aria-pressed={d === day}
+            className={
+              "grid min-h-16 min-w-0 cursor-pointer content-start gap-1.5 rounded-lg border border-line p-2 text-left text-[12px] text-fg aria-pressed:border-accent aria-pressed:ring-2 aria-pressed:ring-accent " +
+              (isBusinessDay(d) ? "bg-surface" : "bg-idle-soft")
+            }
+            onClick={() => setDay(d)}
+          >
             <span className="font-semibold">{dayLabel(d)}</span>
             <span className="flex flex-wrap gap-0.5">
-              {sales > 0 && <i className="rounded px-1.5 font-mono text-[10px] font-semibold not-italic bg-idle-soft text-muted" title={`${sales} transaction(s)`}>{sales}</i>}
-              {created && <i className="rounded px-1.5 font-mono text-[10px] font-semibold not-italic bg-accent-soft text-accent" title={`Payout #${created.id} created`}>#{created.id}↗</i>}
-              {arrives && <i className="rounded px-1.5 font-mono text-[10px] font-semibold not-italic bg-ok-soft text-ok" title={`Payout #${arrives.id} arrives`}>#{arrives.id}✓</i>}
+              {sales > 0 && (
+                <i
+                  className="rounded bg-idle-soft px-1.5 font-mono text-[10px] font-semibold text-muted not-italic"
+                  title={`${sales} transaction(s)`}
+                >
+                  {sales}
+                </i>
+              )}
+              {created && (
+                <i
+                  className="rounded bg-accent-soft px-1.5 font-mono text-[10px] font-semibold text-accent not-italic"
+                  title={`Payout #${created.id} created`}
+                >
+                  #{created.id}↗
+                </i>
+              )}
+              {arrives && (
+                <i
+                  className="rounded bg-ok-soft px-1.5 font-mono text-[10px] font-semibold text-ok not-italic"
+                  title={`Payout #${arrives.id} arrives`}
+                >
+                  #{arrives.id}✓
+                </i>
+              )}
             </span>
           </button>
         );
@@ -73,13 +132,21 @@ function Buckets({ b }: { b: Balances }) {
   return (
     <div className="panel">
       <div className="eyebrow mb-2.5">Where the merchant's net money is, end of day</div>
-      <div className="flex h-3.5 gap-0.5 overflow-hidden rounded-full bg-idle-soft mb-3.5 [&>i]:transition-[flex-grow] [&>i]:duration-400" aria-hidden="true">
-        {BUCKETS.map(([k, , , c]) => b[k] > 0 && <i key={k} style={{ flexGrow: b[k] / total, background: `var(${c})` }} />)}
+      <div
+        className="mb-3.5 flex h-3.5 gap-0.5 overflow-hidden rounded-full bg-idle-soft [&>i]:transition-[flex-grow] [&>i]:duration-400"
+        aria-hidden="true"
+      >
+        {BUCKETS.map(
+          ([k, , , c]) => b[k] > 0 && <i key={k} style={{ flexGrow: b[k] / total, background: `var(${c})` }} />,
+        )}
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         {BUCKETS.map(([k, name, desc, c], i) => (
           <div key={k} className="grid min-w-0 content-start gap-1">
-            <span className="eyebrow" style={{ color: `var(${c})` }}>{i > 0 ? "→ " : ""}{name}</span>
+            <span className="eyebrow" style={{ color: `var(${c})` }}>
+              {i > 0 ? "→ " : ""}
+              {name}
+            </span>
             <span className="big text-[20px]">{money(b[k])}</span>
             <small className="text-[12px] text-muted">{desc}</small>
           </div>
@@ -92,13 +159,25 @@ function Buckets({ b }: { b: Balances }) {
 function EntryRows({ list, showAvail }: { list: Entry[]; showAvail?: boolean }) {
   return (
     <table>
-      <thead><tr><th>Entry</th><th>Type</th><th className="n">Gross</th><th className="n">Fee</th><th className="n">Net</th>{showAvail && <th>Available</th>}</tr></thead>
+      <thead>
+        <tr>
+          <th>Entry</th>
+          <th>Type</th>
+          <th className="n">Gross</th>
+          <th className="n">Fee</th>
+          <th className="n">Net</th>
+          {showAvail && <th>Available</th>}
+        </tr>
+      </thead>
       <tbody>
         {list.map(e => (
           <tr key={e.id}>
-            <td>{e.label}</td><td className="mono">{TYPE_LABEL[e.type]}</td>
-            <td className="n">{e.gross ? money(e.gross) : "—"}</td><td className="n">{e.fee ? money(-e.fee) : "—"}</td>
-            <td className="n">{money(e.net)}</td>{showAvail && <td className="mono">{dayLabel(e.availableOn)}</td>}
+            <td>{e.label}</td>
+            <td className="mono">{TYPE_LABEL[e.type]}</td>
+            <td className="n">{e.gross ? money(e.gross) : "—"}</td>
+            <td className="n">{e.fee ? money(-e.fee) : "—"}</td>
+            <td className="n">{money(e.net)}</td>
+            {showAvail && <td className="mono">{dayLabel(e.availableOn)}</td>}
           </tr>
         ))}
       </tbody>
@@ -110,25 +189,74 @@ function Reconciliation({ p, entries }: { p: Payout; entries: Entry[] }) {
   const list = p.entryIds.map(id => entries[id]);
   const sum = (f: (e: Entry) => boolean, v: (e: Entry) => number) => list.filter(f).reduce((a, e) => a + v(e), 0);
   const lines: [string, number][] = [
-    ["Gross charges", sum(e => e.type === "charge", e => e.gross)],
-    ["Processing fees", -sum(e => e.type === "charge", e => e.fee)],
-    ["Refunds", sum(e => e.type === "refund", e => e.net)],
-    ["Chargebacks + dispute fees", sum(e => e.type === "chargeback", e => e.net)],
-    ["Reserve held", sum(e => e.type === "reserve_hold", e => e.net)],
-    ["Reserve released", sum(e => e.type === "reserve_release", e => e.net)],
+    [
+      "Gross charges",
+      sum(
+        e => e.type === "charge",
+        e => e.gross,
+      ),
+    ],
+    [
+      "Processing fees",
+      -sum(
+        e => e.type === "charge",
+        e => e.fee,
+      ),
+    ],
+    [
+      "Refunds",
+      sum(
+        e => e.type === "refund",
+        e => e.net,
+      ),
+    ],
+    [
+      "Chargebacks + dispute fees",
+      sum(
+        e => e.type === "chargeback",
+        e => e.net,
+      ),
+    ],
+    [
+      "Reserve held",
+      sum(
+        e => e.type === "reserve_hold",
+        e => e.net,
+      ),
+    ],
+    [
+      "Reserve released",
+      sum(
+        e => e.type === "reserve_release",
+        e => e.net,
+      ),
+    ],
   ].filter(([, v]) => Math.abs(v as number) > 0.004) as [string, number][];
   return (
     <div className="panel grid gap-3.5">
       <div>
         <div className="eyebrow">Payout #{p.id} reconciliation</div>
-        <p className="lede">Created {dayLabel(p.created)} at the cut-off, arrives {dayLabel(p.arrival)}. A payout is one bank transfer that bundles many balance entries, which is why it never matches a single sale.</p>
+        <p className="lede">
+          Created {dayLabel(p.created)} at the cut-off, arrives {dayLabel(p.arrival)}. A payout is one bank transfer
+          that bundles many balance entries, which is why it never matches a single sale.
+        </p>
       </div>
       <div className="cols">
         <div className="ledger content-start">
-          {lines.map(([k, v]) => <div key={k} className="row"><span>{k}</span><span>{money(v)}</span></div>)}
-          <div className="row font-semibold"><span>Payout amount</span><span>{money(p.amount)}</span></div>
+          {lines.map(([k, v]) => (
+            <div key={k} className="row">
+              <span>{k}</span>
+              <span>{money(v)}</span>
+            </div>
+          ))}
+          <div className="row font-semibold">
+            <span>Payout amount</span>
+            <span>{money(p.amount)}</span>
+          </div>
         </div>
-        <div className="overflow-x-auto"><EntryRows list={list} /></div>
+        <div className="overflow-x-auto">
+          <EntryRows list={list} />
+        </div>
       </div>
     </div>
   );
@@ -152,42 +280,64 @@ export default function Payouts() {
           <span className="eyebrow">after settlement</span>
           <h2>From sale to bank deposit</h2>
           <p className="lede">
-            Settlement moves money from the card networks to the processor. A payout moves the merchant's share from
-            the processor to the merchant's bank. In between, every sale passes through balance buckets. Change the
+            Settlement moves money from the card networks to the processor. A payout moves the merchant's share from the
+            processor to the merchant's bank. In between, every sale passes through balance buckets. Change the
             settings, then step through two weeks of sales.
           </p>
         </div>
-        <Controls s={settings} set={s => { setSettings(s); setPicked(null); }} />
+        <Controls
+          s={settings}
+          set={s => {
+            setSettings(s);
+            setPicked(null);
+          }}
+        />
         <Calendar day={day} setDay={setDay} payouts={payouts} />
         <Buckets b={b} />
       </section>
 
       <section className="cols">
-        <div className="panel overflow-x-auto grid gap-3.5 content-start">
+        <div className="panel grid content-start gap-3.5 overflow-x-auto">
           <div className="eyebrow">{dayLabel(day)} · new balance entries</div>
           {today.length ? <EntryRows list={today} showAvail /> : <p className="lede">No sales or reversals today.</p>}
-          {freed.length > 0 && (<>
-            <div className="eyebrow">Became available today</div>
-            <EntryRows list={freed} />
-          </>)}
+          {freed.length > 0 && (
+            <>
+              <div className="eyebrow">Became available today</div>
+              <EntryRows list={freed} />
+            </>
+          )}
         </div>
-        <div className="panel grid gap-2.5 content-start">
+        <div className="panel grid content-start gap-2.5">
           <div className="eyebrow">Payouts so far</div>
           {visible.length === 0 && <p className="lede">No payout yet. The first sales are still pending settlement.</p>}
           {visible.map(p => {
             const st = payoutStatus(p, day)!;
             return (
-              <button key={p.id} className="flex cursor-pointer flex-wrap items-center gap-2.5 rounded-lg border border-line bg-transparent px-2.5 py-2 text-left text-[14px] text-fg aria-pressed:border-accent aria-pressed:bg-accent-soft" aria-pressed={p.id === selected?.id} onClick={() => setPicked(p.id)}>
+              <button
+                key={p.id}
+                className="flex cursor-pointer flex-wrap items-center gap-2.5 rounded-lg border border-line bg-transparent px-2.5 py-2 text-left text-[14px] text-fg aria-pressed:border-accent aria-pressed:bg-accent-soft"
+                aria-pressed={p.id === selected?.id}
+                onClick={() => setPicked(p.id)}
+              >
                 <span className="mono">#{p.id}</span>
-                <span className="badge" style={statusStyle(st)}>{st}</span>
-                <span className="note m-0">{dayLabel(p.created)} → {dayLabel(p.arrival)}</span>
+                <span className="badge" style={statusStyle(st)}>
+                  {st}
+                </span>
+                <span className="note m-0">
+                  {dayLabel(p.created)} → {dayLabel(p.arrival)}
+                </span>
                 <span className="mono ml-auto">{money(p.amount)}</span>
               </button>
             );
           })}
           <div className="detail">
             {(Object.keys(STATUS) as PayoutStatus[]).map(s => (
-              <p key={s} className="text-[13px]"><span className="badge" style={statusStyle(s)}>{s}</span> {STATUS[s][1]}</p>
+              <p key={s} className="text-[13px]">
+                <span className="badge" style={statusStyle(s)}>
+                  {s}
+                </span>{" "}
+                {STATUS[s][1]}
+              </p>
             ))}
           </div>
         </div>

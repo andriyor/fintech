@@ -29,9 +29,7 @@ export default function ReportView(props: { result: Resutl }) {
         })}
       </div>
 
-      <div style={{ marginBottom: "12px" }}>
-        Total tip: {props.result.totalTip}
-      </div>
+      <div style={{ marginBottom: "12px" }}>Total tip: {props.result.totalTip}</div>
     </div>
   );
 }

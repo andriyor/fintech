@@ -15,7 +15,13 @@ export function graphOf(machine: AnyStateMachine): Graph {
     .filter(s => s.key !== start)
     .map(s => {
       const meta = (s.meta ?? {}) as Meta;
-      return { key: s.key, phase: meta.phase ?? "", label: meta.label ?? s.key, status: meta.status ?? s.key, final: s.tags.includes("final") };
+      return {
+        key: s.key,
+        phase: meta.phase ?? "",
+        label: meta.label ?? s.key,
+        status: meta.status ?? s.key,
+        final: s.tags.includes("final"),
+      };
     });
 
   const edges = new Map<string, GraphEdge>();
@@ -25,7 +31,8 @@ export function graphOf(machine: AnyStateMachine): Graph {
     edges.set(`${from}>${to}`, e);
   };
   for (const s of states) {
-    for (const [event, defs] of s.transitions) for (const d of defs) for (const t of d.target ?? []) add(s.key, t.key, event);
+    for (const [event, defs] of s.transitions)
+      for (const d of defs) for (const t of d.target ?? []) add(s.key, t.key, event);
     for (const d of s.always ?? []) for (const t of d.target ?? []) add(s.key, t.key, "always");
   }
 

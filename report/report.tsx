@@ -10,12 +10,11 @@ import { Transaction } from "./types";
 // import { aggregate } from "./multi-pass";
 import { aggregate } from "./single-pass";
 
-
 (async () => {
   const files = await glob("transactions/*.json");
   console.log("files", files);
 
-  const transactions: Transaction[] = files.map((filePath) => {
+  const transactions: Transaction[] = files.map(filePath => {
     return JSON.parse(fs.readFileSync(filePath, "utf-8"));
   });
   console.log("transactions", transactions);
@@ -27,9 +26,7 @@ import { aggregate } from "./single-pass";
   const browser = await chromium.launch({ channel: "chromium" });
   const page = await browser.newPage();
 
-  const htmlContent = renderToString(
-    <ReportView result={result} />
-  );
+  const htmlContent = renderToString(<ReportView result={result} />);
 
   await page.setContent(htmlContent);
 

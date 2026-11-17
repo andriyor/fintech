@@ -9,8 +9,19 @@ export type Context = { scenario: Scenario; ledger: Ledger; captured: number; hi
 
 // Every event the user can trigger, in the order its buttons are shown (first one is the primary action).
 export const EVENTS = [
-  "PAY", "APPROVE", "DECLINE", "CAPTURE", "CAPTURE_PARTIAL", "VOID", "EXPIRE", "CAPTURE_FAIL",
-  "RETRY", "GIVE_UP", "CLOSE_BATCH", "REFUND", "DISPUTE",
+  "PAY",
+  "APPROVE",
+  "DECLINE",
+  "CAPTURE",
+  "CAPTURE_PARTIAL",
+  "VOID",
+  "EXPIRE",
+  "CAPTURE_FAIL",
+  "RETRY",
+  "GIVE_UP",
+  "CLOSE_BATCH",
+  "REFUND",
+  "DISPUTE",
 ] as const;
 export type UserEvent = { type: (typeof EVENTS)[number] };
 type Event = UserEvent | { type: "SET_SCENARIO"; scenario: Scenario } | { type: "RESET" };
@@ -32,14 +43,23 @@ export const paymentMachine = setup({
     // Capturing less than the hold releases the rest back to the customer.
     capture: assign(({ context: c }, p: { share: number }) => {
       const amount = round(c.scenario.amount * p.share);
-      return { captured: amount, ledger: { ...c.ledger, avail: round(c.ledger.avail + c.ledger.held - amount), held: amount } };
+      return {
+        captured: amount,
+        ledger: { ...c.ledger, avail: round(c.ledger.avail + c.ledger.held - amount), held: amount },
+      };
     }),
     release: ledger(l => ({ avail: round(l.avail + l.held), held: 0 })),
     // Clearing posts the charge (the hold disappears); settlement pays the merchant net of fees.
-    settle: ledger((l, c) => ({ held: 0, merchant: round(l.merchant + c.captured - feeOn(c.captured)), fees: round(l.fees + feeOn(c.captured)) })),
+    settle: ledger((l, c) => ({
+      held: 0,
+      merchant: round(l.merchant + c.captured - feeOn(c.captured)),
+      fees: round(l.fees + feeOn(c.captured)),
+    })),
     refund: ledger((l, c) => ({ avail: round(l.avail + c.captured), merchant: round(l.merchant - c.captured) })),
     chargeback: ledger((l, c) => ({
-      avail: round(l.avail + c.captured), merchant: round(l.merchant - c.captured - CHARGEBACK_FEE), fees: round(l.fees + CHARGEBACK_FEE),
+      avail: round(l.avail + c.captured),
+      merchant: round(l.merchant - c.captured - CHARGEBACK_FEE),
+      fees: round(l.fees + CHARGEBACK_FEE),
     })),
   },
 }).createMachine({
@@ -97,11 +117,27 @@ export const paymentMachine = setup({
         DISPUTE: { target: "CHARGEBACK", actions: "chargeback" },
       },
     },
-    DECLINED: { meta: { phase: "1 · Authorization" }, tags: "final", entry: { type: "record", params: { status: "DECLINED" } } },
+    DECLINED: {
+      meta: { phase: "1 · Authorization" },
+      tags: "final",
+      entry: { type: "record", params: { status: "DECLINED" } },
+    },
     VOIDED: { meta: { phase: "2 · Capture" }, tags: "final", entry: { type: "record", params: { status: "VOIDED" } } },
-    EXPIRED: { meta: { phase: "2 · Capture" }, tags: "final", entry: { type: "record", params: { status: "EXPIRED" } } },
-    REFUNDED: { meta: { phase: "4 · Post-settlement" }, tags: "final", entry: { type: "record", params: { status: "REFUNDED" } } },
-    CHARGEBACK: { meta: { phase: "4 · Post-settlement" }, tags: "final", entry: { type: "record", params: { status: "CHARGEBACK" } } },
+    EXPIRED: {
+      meta: { phase: "2 · Capture" },
+      tags: "final",
+      entry: { type: "record", params: { status: "EXPIRED" } },
+    },
+    REFUNDED: {
+      meta: { phase: "4 · Post-settlement" },
+      tags: "final",
+      entry: { type: "record", params: { status: "REFUNDED" } },
+    },
+    CHARGEBACK: {
+      meta: { phase: "4 · Post-settlement" },
+      tags: "final",
+      entry: { type: "record", params: { status: "CHARGEBACK" } },
+    },
   },
 });
 
@@ -109,75 +145,143 @@ const h = (route: string, text: string): Hop => ({ route, text });
 
 /** Button label and the messages between parties for an event, given where the payment is now. */
 export function describe(type: UserEvent["type"], c: Context): { label: string; hops: Hop[] } {
-  const A = c.scenario.amount, $ = money;
-  const toBatch = (amount: number) => h("processor→acquirer", `${$(amount)} is added to the merchant's open batch for today. Nothing is sent to the issuer yet.`);
-  const capture = (label: string, amount: number, text: string) => ({ label, hops: [h("merchant→processor", text), toBatch(amount)] });
+  const A = c.scenario.amount,
+    $ = money;
+  const toBatch = (amount: number) =>
+    h(
+      "processor→acquirer",
+      `${$(amount)} is added to the merchant's open batch for today. Nothing is sent to the issuer yet.`,
+    );
+  const capture = (label: string, amount: number, text: string) => ({
+    label,
+    hops: [h("merchant→processor", text), toBatch(amount)],
+  });
   switch (type) {
-    case "PAY": return {
-      label: `Pay ${$(A)}`,
-      hops: c.scenario.channel === "present"
-        ? [h("customer→merchant", `Cardholder taps or inserts the card at the terminal for ${$(A)}. The chip creates a one-time cryptogram.`),
-           h("merchant→processor", "Terminal sends the encrypted card data and amount to the processor.")]
-        : [h("customer→merchant", `Cardholder types the card details at checkout for ${$(A)}. The bank may ask them to confirm in its app (3-D Secure).`),
-           h("merchant→processor", "Checkout page sends tokenized card data and amount to the processor.")],
-    };
-    case "APPROVE": return {
-      label: "Issuer approves",
-      hops: [
-        h("processor→network", "Processor routes the authorization request to the card network (Visa, Mastercard…)."),
-        h("network→issuer", "Network forwards it to the cardholder's issuing bank."),
-        h("issuer→network", `Issuer checks the balance or credit line and its fraud rules, approves and places a ${$(A)} hold.`),
-        h("network→merchant", "Approval code travels back through network and processor to the merchant."),
-        ...(c.scenario.mode === "auto" ? [toBatch(A)] : []),
-      ],
-    };
-    case "DECLINE": return {
-      label: "Issuer declines",
-      hops: [h("network→issuer", "Network forwards the request to the issuing bank."),
-             h("issuer→merchant", "Issuer declines: insufficient funds, wrong card details or suspected fraud.")],
-    };
-    case "CAPTURE": return capture("Capture full amount", A, `Merchant ships the order (or the guest checks out) and captures ${$(A)}.`);
+    case "PAY":
+      return {
+        label: `Pay ${$(A)}`,
+        hops:
+          c.scenario.channel === "present"
+            ? [
+                h(
+                  "customer→merchant",
+                  `Cardholder taps or inserts the card at the terminal for ${$(A)}. The chip creates a one-time cryptogram.`,
+                ),
+                h("merchant→processor", "Terminal sends the encrypted card data and amount to the processor."),
+              ]
+            : [
+                h(
+                  "customer→merchant",
+                  `Cardholder types the card details at checkout for ${$(A)}. The bank may ask them to confirm in its app (3-D Secure).`,
+                ),
+                h("merchant→processor", "Checkout page sends tokenized card data and amount to the processor."),
+              ],
+      };
+    case "APPROVE":
+      return {
+        label: "Issuer approves",
+        hops: [
+          h("processor→network", "Processor routes the authorization request to the card network (Visa, Mastercard…)."),
+          h("network→issuer", "Network forwards it to the cardholder's issuing bank."),
+          h(
+            "issuer→network",
+            `Issuer checks the balance or credit line and its fraud rules, approves and places a ${$(A)} hold.`,
+          ),
+          h("network→merchant", "Approval code travels back through network and processor to the merchant."),
+          ...(c.scenario.mode === "auto" ? [toBatch(A)] : []),
+        ],
+      };
+    case "DECLINE":
+      return {
+        label: "Issuer declines",
+        hops: [
+          h("network→issuer", "Network forwards the request to the issuing bank."),
+          h("issuer→merchant", "Issuer declines: insufficient funds, wrong card details or suspected fraud."),
+        ],
+      };
+    case "CAPTURE":
+      return capture(
+        "Capture full amount",
+        A,
+        `Merchant ships the order (or the guest checks out) and captures ${$(A)}.`,
+      );
     case "CAPTURE_PARTIAL": {
       const part = round(A * PARTIAL);
-      return capture("Capture less", part, `Only part of the order ships. Merchant captures ${$(part)}; the rest of the hold is released.`);
+      return capture(
+        "Capture less",
+        part,
+        `Only part of the order ships. Merchant captures ${$(part)}; the rest of the hold is released.`,
+      );
     }
-    case "VOID": return {
-      label: "Void",
-      hops: [h("merchant→processor", "Merchant cancels the sale before capture."),
-             h("processor→issuer", "Void travels through the network; the issuer releases the hold.")],
-    };
-    case "EXPIRE": return { label: "Let it expire", hops: [h("issuer→customer", "No capture arrived in time. The issuer drops the authorization and releases the hold.")] };
-    case "CAPTURE_FAIL": return {
-      label: "Capture fails",
-      hops: [h("merchant→processor", "Merchant sends a capture request."),
-             h("processor→acquirer", "The request errors out: network issue or bank rejection. The hold stays.")],
-    };
-    case "RETRY": return capture("Retry capture", A, `Merchant retries the capture for ${$(A)}.`);
-    case "GIVE_UP": return { label: "Give up (expires)", hops: [h("issuer→customer", "The authorization window closes and the hold is released.")] };
+    case "VOID":
+      return {
+        label: "Void",
+        hops: [
+          h("merchant→processor", "Merchant cancels the sale before capture."),
+          h("processor→issuer", "Void travels through the network; the issuer releases the hold."),
+        ],
+      };
+    case "EXPIRE":
+      return {
+        label: "Let it expire",
+        hops: [
+          h("issuer→customer", "No capture arrived in time. The issuer drops the authorization and releases the hold."),
+        ],
+      };
+    case "CAPTURE_FAIL":
+      return {
+        label: "Capture fails",
+        hops: [
+          h("merchant→processor", "Merchant sends a capture request."),
+          h("processor→acquirer", "The request errors out: network issue or bank rejection. The hold stays."),
+        ],
+      };
+    case "RETRY":
+      return capture("Retry capture", A, `Merchant retries the capture for ${$(A)}.`);
+    case "GIVE_UP":
+      return {
+        label: "Give up (expires)",
+        hops: [h("issuer→customer", "The authorization window closes and the hold is released.")],
+      };
     case "CLOSE_BATCH": {
       const fee = feeOn(c.captured);
       return {
         label: "Close batch (clear + settle)",
         hops: [
-          h("merchant→acquirer", "Cut-off: the merchant's batch closes and the acquirer sends clearing records to the network."),
-          h("network→issuer", `Clearing: the issuer receives the record and posts the ${$(c.captured)} charge to the cardholder. The hold is gone.`),
+          h(
+            "merchant→acquirer",
+            "Cut-off: the merchant's batch closes and the acquirer sends clearing records to the network.",
+          ),
+          h(
+            "network→issuer",
+            `Clearing: the issuer receives the record and posts the ${$(c.captured)} charge to the cardholder. The hold is gone.`,
+          ),
           h("issuer→network", "Settlement: the issuer sends the funds minus interchange to the network."),
           h("network→acquirer", "Network takes its scheme fee and pays the acquiring bank."),
           h("acquirer→merchant", `Acquirer and processor take their cut and pay the merchant ${$(c.captured - fee)}.`),
         ],
       };
     }
-    case "REFUND": return {
-      label: "Merchant refunds",
-      hops: [h("merchant→processor", "Merchant issues a full refund through the processor."),
-             h("acquirer→issuer", "Funds flow back through acquirer and network to the issuer."),
-             h("issuer→customer", `Cardholder gets ${$(c.captured)} back, typically within a few business days.`)],
-    };
-    case "DISPUTE": return {
-      label: "Customer disputes",
-      hops: [h("customer→issuer", "Cardholder files a dispute with their bank."),
-             h("issuer→network", "Issuer reverses the funds through the network."),
-             h("acquirer→merchant", `Acquirer debits the merchant ${$(c.captured)} plus a ${$(CHARGEBACK_FEE)} chargeback fee.`)],
-    };
+    case "REFUND":
+      return {
+        label: "Merchant refunds",
+        hops: [
+          h("merchant→processor", "Merchant issues a full refund through the processor."),
+          h("acquirer→issuer", "Funds flow back through acquirer and network to the issuer."),
+          h("issuer→customer", `Cardholder gets ${$(c.captured)} back, typically within a few business days.`),
+        ],
+      };
+    case "DISPUTE":
+      return {
+        label: "Customer disputes",
+        hops: [
+          h("customer→issuer", "Cardholder files a dispute with their bank."),
+          h("issuer→network", "Issuer reverses the funds through the network."),
+          h(
+            "acquirer→merchant",
+            `Acquirer debits the merchant ${$(c.captured)} plus a ${$(CHARGEBACK_FEE)} chargeback fee.`,
+          ),
+        ],
+      };
   }
 }

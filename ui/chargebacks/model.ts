@@ -5,7 +5,10 @@ export type DisputeStatus = "NEEDS_RESPONSE" | "UNDER_REVIEW" | "WON" | "LOST" |
 
 export type Evidence = { id: string; label: string };
 export type Reason = {
-  id: string; code: string; name: string; story: string;
+  id: string;
+  code: string;
+  name: string;
+  story: string;
   evidence: Evidence[];
   winsWith: string[][]; // the dispute is won if any one of these evidence sets is fully submitted
   tip: string;
@@ -18,7 +21,9 @@ export const CARD_FEE = +(ORDER * 0.029 + 0.3).toFixed(2); // what a plain refun
 
 export const REASONS: Reason[] = [
   {
-    id: "fraud", code: "Visa 10.4 · fraud, card not present", name: "Fraud",
+    id: "fraud",
+    code: "Visa 10.4 · fraud, card not present",
+    name: "Fraud",
     story: "Cardholder says they never made this online purchase.",
     evidence: [
       { id: "3ds", label: "3-D Secure authentication on the payment" },
@@ -31,7 +36,9 @@ export const REASONS: Reason[] = [
     tip: "3-D Secure shifts fraud liability to the issuer. Without it, show the buyer has paid you before from the same device.",
   },
   {
-    id: "notReceived", code: "Visa 13.1 · merchandise not received", name: "Not received",
+    id: "notReceived",
+    code: "Visa 13.1 · merchandise not received",
+    name: "Not received",
     story: "Cardholder says the package never arrived.",
     evidence: [
       { id: "tracking", label: "Carrier tracking showing delivered" },
@@ -43,7 +50,9 @@ export const REASONS: Reason[] = [
     tip: "Proof of delivery to the address the customer gave is what decides it.",
   },
   {
-    id: "notAsDescribed", code: "Visa 13.3 · not as described", name: "Not as described",
+    id: "notAsDescribed",
+    code: "Visa 13.3 · not as described",
+    name: "Not as described",
     story: "Cardholder says the item was damaged or different from the listing.",
     evidence: [
       { id: "listing", label: "Listing text and photos at time of sale" },
@@ -55,7 +64,9 @@ export const REASONS: Reason[] = [
     tip: "Show the item matched the listing and that the customer skipped your return process.",
   },
   {
-    id: "creditNotProcessed", code: "Visa 13.6 · credit not processed", name: "Refund not received",
+    id: "creditNotProcessed",
+    code: "Visa 13.6 · credit not processed",
+    name: "Refund not received",
     story: "Cardholder says they returned the item and never got their money back.",
     evidence: [
       { id: "refunded", label: "Proof the refund was already issued" },
@@ -76,7 +87,10 @@ export const DAYS = { respondBy: 7, issuerDecision: 45, preArb: 75, arbitration:
 export type Entry = { label: string; amount: number };
 
 export const STATUS_INFO: Record<DisputeStatus, [string, string]> = {
-  NEEDS_RESPONSE: ["--hold", "Money and fee already taken. The clock is running: respond before the processor's deadline (often 7–21 days)."],
+  NEEDS_RESPONSE: [
+    "--hold",
+    "Money and fee already taken. The clock is running: respond before the processor's deadline (often 7–21 days).",
+  ],
   UNDER_REVIEW: ["--accent", "Evidence sent (representment). The issuer has weeks to decide; nothing to do but wait."],
   WON: ["--ok", "The issuer reversed the chargeback. The disputed amount comes back; the dispute fee usually doesn't."],
   LOST: ["--bad", "The cardholder keeps the money. The dispute still counts toward the merchant's chargeback ratio."],
@@ -88,6 +102,7 @@ export const STATUS_INFO: Record<DisputeStatus, [string, string]> = {
 export function ratioBand(ratio: number): [string, string] {
   if (ratio < 0.005) return ["--ok", "Healthy. Well under the levels card networks watch."];
   if (ratio < 0.009) return ["--hold", "Watch it. Processors start asking questions and may add a reserve."];
-  if (ratio < 0.015) return ["--bad", "Network monitoring programs likely: monthly fines, higher fees, a remediation plan."];
+  if (ratio < 0.015)
+    return ["--bad", "Network monitoring programs likely: monthly fines, higher fees, a remediation plan."];
   return ["--bad", "Excessive. Fines grow every month and the processor may close the account (and list it on MATCH)."];
 }

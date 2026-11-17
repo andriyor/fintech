@@ -12,21 +12,43 @@ const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 function ScenarioControls({ sc, set, locked }: { sc: Scenario; set: (s: Scenario) => void; locked: boolean }) {
   return (
     <div className="panel controls items-end">
-      <label htmlFor="channel">Where the card is used
-        <select id="channel" value={sc.channel} disabled={locked} onChange={e => set({ ...sc, channel: e.target.value as Scenario["channel"] })}>
+      <label htmlFor="channel">
+        Where the card is used
+        <select
+          id="channel"
+          value={sc.channel}
+          disabled={locked}
+          onChange={e => set({ ...sc, channel: e.target.value as Scenario["channel"] })}
+        >
           <option value="present">In store (card present)</option>
           <option value="online">Online (card not present)</option>
         </select>
       </label>
-      <label htmlFor="mode">Capture
-        <select id="mode" value={sc.mode} disabled={locked} onChange={e => set({ ...sc, mode: e.target.value as Scenario["mode"] })}>
+      <label htmlFor="mode">
+        Capture
+        <select
+          id="mode"
+          value={sc.mode}
+          disabled={locked}
+          onChange={e => set({ ...sc, mode: e.target.value as Scenario["mode"] })}
+        >
           <option value="auto">Automatic: capture with authorization</option>
           <option value="separate">Separate: authorize now, capture later</option>
         </select>
       </label>
-      <label htmlFor="amount">Amount
-        <input id="amount" type="number" min={1} step={1} value={sc.amount} disabled={locked}
-          onChange={e => set({ ...sc, amount: Math.max(1, Math.min(990, Math.round(+e.target.value * 100) / 100 || 1)) })} />
+      <label htmlFor="amount">
+        Amount
+        <input
+          id="amount"
+          type="number"
+          min={1}
+          step={1}
+          value={sc.amount}
+          disabled={locked}
+          onChange={e =>
+            set({ ...sc, amount: Math.max(1, Math.min(990, Math.round(+e.target.value * 100) / 100 || 1)) })
+          }
+        />
       </label>
       <p className="note m-0 max-w-[48ch]">
         {sc.mode === "auto"
@@ -71,34 +93,74 @@ export default function Simulator() {
   function reset() {
     runId.current++;
     send({ type: "RESET" });
-    setChanged([]); setPeek(null); setHop(null); setBusy(false);
+    setChanged([]);
+    setPeek(null);
+    setHop(null);
+    setBusy(false);
   }
 
   return (
     <section>
-      <ScenarioControls sc={scenario} set={sc => send({ type: "SET_SCENARIO", scenario: sc })} locked={!!status || busy} />
+      <ScenarioControls
+        sc={scenario}
+        set={sc => send({ type: "SET_SCENARIO", scenario: sc })}
+        locked={!!status || busy}
+      />
       <Actors hop={hop} />
       <div className="panel">
         <div className="eyebrow">Status machine · click any status to read about it</div>
-        <StatusMachine current={status} history={history} actions={actions.map(a => a.type)}
-          label={e => describe(e as UserEvent["type"], snap.context).label} hot={busy ? [] : hot} onHot={setHot} peek={peek} onPeek={s => setPeek(p => (p === s ? null : s))} />
+        <StatusMachine
+          current={status}
+          history={history}
+          actions={actions.map(a => a.type)}
+          label={e => describe(e as UserEvent["type"], snap.context).label}
+          hot={busy ? [] : hot}
+          onHot={setHot}
+          peek={peek}
+          onPeek={s => setPeek(p => (p === s ? null : s))}
+        />
       </div>
       <div className="sim">
         <div className="panel">
           <StatusDetail current={status} peek={peek} />
           <div className="actions">
             {actions.map((a, i) => (
-              <button key={a.type} className={"act" + (i ? " alt" : "") + (hot.includes(a.type) ? " hot" : "")} disabled={busy}
-                onMouseEnter={() => setHot([a.type])} onMouseLeave={() => setHot([])} onFocus={() => setHot([a.type])} onBlur={() => setHot([])}
-                onClick={() => { setHot([]); run(a.type, a.hops); }}><span className="num">{i + 1}</span>{a.label}</button>
+              <button
+                key={a.type}
+                className={"act" + (i ? " alt" : "") + (hot.includes(a.type) ? " hot" : "")}
+                disabled={busy}
+                onMouseEnter={() => setHot([a.type])}
+                onMouseLeave={() => setHot([])}
+                onFocus={() => setHot([a.type])}
+                onBlur={() => setHot([])}
+                onClick={() => {
+                  setHot([]);
+                  run(a.type, a.hops);
+                }}
+              >
+                <span className="num">{i + 1}</span>
+                {a.label}
+              </button>
             ))}
-            {(status || busy) && <button className="act alt" onClick={reset}>Start over</button>}
+            {(status || busy) && (
+              <button className="act alt" onClick={reset}>
+                Start over
+              </button>
+            )}
           </div>
           {history.length > 0 && (
-            <div className="mt-2.5 font-mono text-[12px] text-muted wrap-anywhere">path: {history.join(" → ")}{snap.hasTag("final") ? "  (final)" : ""}</div>
+            <div className="mt-2.5 font-mono text-[12px] wrap-anywhere text-muted">
+              path: {history.join(" → ")}
+              {snap.hasTag("final") ? "  (final)" : ""}
+            </div>
           )}
         </div>
-        <LedgerPanel ledger={ledger} changed={changed} authorized={history.includes("AUTHORIZED") ? scenario.amount : 0} captured={captured} />
+        <LedgerPanel
+          ledger={ledger}
+          changed={changed}
+          authorized={history.includes("AUTHORIZED") ? scenario.amount : 0}
+          captured={captured}
+        />
       </div>
     </section>
   );

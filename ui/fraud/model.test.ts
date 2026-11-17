@@ -1,7 +1,19 @@
 import assert from "node:assert/strict";
 import { describe, it } from "vitest";
 import {
-  BASE, CHALLENGE, NEVER, PRESETS, SAMPLE, SIGNALS, cheapest, decide, outcome, sample, score, type Decision, type Thresholds,
+  BASE,
+  CHALLENGE,
+  NEVER,
+  PRESETS,
+  SAMPLE,
+  SIGNALS,
+  cheapest,
+  decide,
+  outcome,
+  sample,
+  score,
+  type Decision,
+  type Thresholds,
 } from "./model";
 
 const payments = sample();
@@ -9,7 +21,11 @@ const payments = sample();
 describe("risk score", () => {
   it("adds up its parts and stays within 0–100", () => {
     assert.equal(score([]).score, BASE);
-    assert.equal(score(SIGNALS.map(s => s.id)).score, 100, "every signal on is exactly 100, so no capping hides points");
+    assert.equal(
+      score(SIGNALS.map(s => s.id)).score,
+      100,
+      "every signal on is exactly 100, so no capping hides points",
+    );
     for (const [, on] of PRESETS) {
       const s = score(on);
       assert.equal(s.score, BASE + s.parts.reduce((a, p) => a + p.points, 0));
@@ -39,7 +55,10 @@ describe("sample", () => {
   });
 
   it("scores fraud higher than genuine payments on average", () => {
-    const avg = (f: boolean) => { const xs = payments.filter(p => p.fraud === f); return xs.reduce((a, p) => a + p.score, 0) / xs.length; };
+    const avg = (f: boolean) => {
+      const xs = payments.filter(p => p.fraud === f);
+      return xs.reduce((a, p) => a + p.score, 0) / xs.length;
+    };
     assert.ok(avg(true) > avg(false) + 30);
     const fraud = payments.filter(p => p.fraud).length;
     assert.ok(Math.abs(fraud / SAMPLE.size - SAMPLE.fraudRate) < 0.015, "fraud rate close to the configured one");
@@ -48,7 +67,10 @@ describe("sample", () => {
 
 describe("threshold trade-off", () => {
   const settings: Thresholds[] = [
-    { challenge: 0, decline: 0 }, { challenge: 30, decline: 70 }, { challenge: 50, decline: NEVER }, { challenge: NEVER, decline: NEVER },
+    { challenge: 0, decline: 0 },
+    { challenge: 30, decline: 70 },
+    { challenge: 50, decline: NEVER },
+    { challenge: NEVER, decline: NEVER },
   ];
 
   it.each(settings)("counts every payment once (challenge ≥ $challenge, decline ≥ $decline)", t => {
