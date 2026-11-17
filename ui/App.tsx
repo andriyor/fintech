@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Overview from "./overview/Overview";
 import Lifecycle from "./lifecycle/Lifecycle";
 import Fraud from "./fraud/Fraud";
 import Tokens from "./tokens/Tokens";
@@ -11,6 +12,7 @@ import Terms from "./terms/Terms";
 import { TOPIC_ICONS } from "./shared/icons";
 
 const TABS = [
+  ["overview", "Overview"],
   ["lifecycle", "Payment lifecycle"],
   ["tokens", "Tokenization"],
   ["fraud", "Fraud & risk"],
@@ -23,7 +25,7 @@ const TABS = [
 ] as const;
 type Tab = (typeof TABS)[number][0];
 
-const fromHash = (): Tab => TABS.find(([id]) => `#${id}` === location.hash)?.[0] ?? "lifecycle";
+const fromHash = (): Tab => TABS.find(([id]) => `#${id}` === location.hash)?.[0] ?? "overview";
 
 export default function App() {
   const [tab, setTab] = useState<Tab>(fromHash);
@@ -55,6 +57,7 @@ export default function App() {
           })}
         </nav>
       </header>
+      {tab === "overview" && <Overview />}
       {tab === "lifecycle" && <Lifecycle />}
       {tab === "tokens" && <Tokens />}
       {tab === "fraud" && <Fraud />}

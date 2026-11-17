@@ -6,6 +6,7 @@ import {
   CreditCard,
   Database,
   Fingerprint,
+  House,
   KeyRound,
   Scale,
   ShieldAlert,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 
 export const TOPIC_ICONS: Record<string, LucideIcon> = {
+  overview: House,
   lifecycle: CreditCard,
   tokens: KeyRound,
   fraud: Fingerprint,
