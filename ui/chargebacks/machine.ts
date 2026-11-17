@@ -1,8 +1,8 @@
 // A card dispute as an XState machine: two cycles (chargeback → representment, then pre-arbitration →
 // arbitration), decisions guarded by the evidence, and the money the merchant loses or gets back.
 import { assign, setup } from "xstate";
-import type { Hop } from "../shared/parties.ts";
-import { ARBITRATION_FEE, DAYS, DISPUTE_FEE, ORDER, REASONS, decide, type DisputeStatus, type Entry } from "./model.ts";
+import type { Hop } from "../shared/parties";
+import { ARBITRATION_FEE, DAYS, DISPUTE_FEE, ORDER, REASONS, decide, type DisputeStatus, type Entry } from "./model";
 
 export type TimelineItem = { day: number; status: DisputeStatus; label: string };
 export type Context = { reasonId: string; evidence: string[]; entries: Entry[]; timeline: TimelineItem[] };

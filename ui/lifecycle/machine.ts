@@ -1,9 +1,9 @@
 // The card payment lifecycle as an XState machine: states, allowed events and their effect on the money.
 // Presentation (button labels and the message hops the UI animates) is in `describe`.
 import { assign, setup } from "xstate";
-import type { Hop } from "../shared/parties.ts";
-import { money } from "../shared/money.ts";
-import { PARTIAL, START, feeOn, type LifecycleStatus, type Ledger, type Scenario } from "./model.ts";
+import type { Hop } from "../shared/parties";
+import { money } from "../shared/money";
+import { PARTIAL, START, feeOn, type LifecycleStatus, type Ledger, type Scenario } from "./model";
 
 export type Context = { scenario: Scenario; ledger: Ledger; captured: number; history: LifecycleStatus[] };
 
