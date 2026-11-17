@@ -5,12 +5,14 @@ import Terms from "./components/Terms";
 import Payouts from "./components/Payouts";
 import Chargebacks from "./components/Chargebacks";
 import Settlement from "./components/Settlement";
+import Books from "./components/Books";
 
 const TABS = [
   ["lifecycle", "Payment lifecycle"],
   ["settlement", "Settlement"],
   ["payouts", "Payouts"],
   ["chargebacks", "Chargebacks"],
+  ["ledger", "Double-entry ledger"],
   ["repo", "Repo data"],
 ] as const;
 type Tab = (typeof TABS)[number][0];
@@ -56,6 +58,7 @@ export default function App() {
       {tab === "settlement" && <Settlement />}
       {tab === "payouts" && <Payouts />}
       {tab === "chargebacks" && <Chargebacks />}
+      {tab === "ledger" && <Books />}
       {tab === "repo" && <RepoData />}
     </div>
   );

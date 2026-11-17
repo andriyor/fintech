@@ -152,3 +152,24 @@ table.pick tbody tr:hover { background: var(--idle-soft); }
 table.pick tbody tr[aria-selected="true"] { background: var(--accent-soft); }
 tr.sum td { font-weight: 600; border-top: 2px solid var(--line); }
 .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
+
+/* double-entry ledger */
+table.journal tbody { cursor: pointer; }
+table.journal tbody:hover td { background: var(--idle-soft); }
+table.journal tbody[data-sel] td { background: var(--accent-soft); }
+table.journal tr.head td { font-weight: 600; border-bottom: 0; padding-top: 10px; }
+table.journal td.cr { padding-left: 32px; }
+button.jn { font: 600 12px var(--mono); min-width: 26px; padding: 2px 6px; border-radius: 5px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; }
+button.jn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.taccts { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+.tacct { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 13px; transition: border-color .25s, background .25s; }
+.tacct.on { border-color: var(--accent); background: var(--accent-soft); }
+.tacct h4 { margin: 0 0 6px; font: 600 13px var(--text); display: flex; justify-content: space-between; gap: 8px; }
+.tacct h4 small { font: 600 10px var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.tsides { display: grid; grid-template-columns: 1fr 1fr; border-top: 2px solid var(--fg); min-height: 36px; font: 12px var(--mono); font-variant-numeric: tabular-nums; }
+.tsides > div { padding: 4px 6px; display: grid; gap: 2px; align-content: start; min-width: 0; }
+.tsides > div:first-child { border-right: 2px solid var(--fg); }
+.tsides span { display: flex; justify-content: space-between; gap: 6px; }
+.tsides span em { color: var(--muted); font-style: normal; }
+.tsides span.hit { color: var(--accent); font-weight: 600; }
+.tbal { margin-top: 6px; display: flex; justify-content: space-between; font: 600 12px var(--mono); }
