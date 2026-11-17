@@ -95,16 +95,34 @@ pnpm report  # PDF of the aggregates in transactions/ (page.pdf); needs `pnpm ex
   arrow highlights the other and shows the full label. A diagram drawn by hand would drift from the rules; a
   graph-layout library would be heavier than the few phases each flow has.
 - **Not everything is a machine.** Payouts derive their status from dates, settlement is a fixed stepper,
-  the ledger replays an event list into journal entries (event sourcing) and fraud scoring is a pure function. Forcing those into XState would add
-  code without adding rules.
+  the ledger replays an event list into journal entries (event sourcing) and fraud scoring is a pure function.
+  Forcing those into XState would add code without adding rules.
 - **Explainable fraud scoring over a seeded sample.** The score is additive points (weighted by how much
   likelier each signal is on fraud) rather than a model, so every point can be shown. The threshold trade-off
   runs over 2,000 payments generated with a seeded PRNG from the same signal rates, so the numbers are the
   same on every load and tests can assert them; challenge outcomes are expected values, not random draws.
 - **Money in integers where totals must balance exactly.** The ledger works in cents; other models round to
   cents at each step and assert totals within half a cent.
+- **Hand-drawn SVG instead of a chart library.** The visuals (state diagrams, the fraud score histogram,
+  T-accounts, gauges) are few and specific, so a few lines of SVG/CSS each are simpler than a chart dependency.
+  Plots that stretch to the page width (the histogram) draw in data units with `preserveAspectRatio="none"` and
+  keep their labels in HTML, so text never scales with the width.
 - **One icon per topic.** Icons come from `lucide-react` (tree-shaken, decorative so `aria-hidden` next to a text
   label). `shared/icons.ts` maps each topic to one icon, used for its tab and its glossary heading, so a topic
   always looks the same.
+- **The PDF report sits beside the app, in one package.** `report/` keeps the original report together: its
+  types, the aggregates and the Playwright script (`pnpm report`). A second `package.json` (pnpm workspace) was
+  considered and rejected: the report's tools are devDependencies that never reach the app bundle, both parts
+  use React, and the Repo data tab imports `report/single-pass.ts` directly. Revisit if the report becomes a
+  real CLI or CI should build the app without the report's tooling. Vitest's root is `ui/`, so `report/` has
+  no tests yet.
+- **Headless report on the full Chromium build.** Playwright prints PDFs only in headless mode;
+  `channel: "chromium"` runs headless on the regular Chromium download, so `playwright install chromium` is
+  the only setup (no separate headless-shell build).
+- **Build scripts are opt-in.** pnpm 12 refuses dependency install scripts unless approved, failing
+  `pnpm install`; `pnpm-workspace.yaml` approves only esbuild (needed by `tsx`, it only checks its binary).
+- **File names that differ only by case are avoided.** macOS file systems are case-insensitive, so `actors.ts`
+  next to `Actors.tsx` or `report.tsx` next to `Report.tsx` collide; such pairs get distinct names
+  (`parties.ts`, `ReportView.tsx`).
 - **Illustrative numbers.** Fees, interchange rates, reason codes and deadlines are simplified and labelled as
   such in the UI; they explain the mechanics, not any one processor's pricing.
