@@ -11,6 +11,7 @@ const TABS = [
   ["settlement", "Settlement"],
   ["payouts", "Payouts"],
   ["chargebacks", "Chargebacks"],
+  ["repo", "Repo data"],
 ] as const;
 type Tab = (typeof TABS)[number][0];
 
@@ -27,30 +28,35 @@ export default function App() {
   return (
     <div className="wrap">
       <header style={{ display: "grid", gap: 10 }}>
-        <span className="eyebrow">fintech basics · processing.excalidraw</span>
-        <h1>Card Payment Lifecycle</h1>
+        <span className="eyebrow">fintech basics</span>
+        <h1>How Card Payments Work</h1>
         <nav className="tabs">
           {TABS.map(([id, name]) => (
             <a key={id} href={`#${id}`} aria-current={tab === id ? "page" : undefined}>{name}</a>
           ))}
         </nav>
-        {tab === "lifecycle" && (
-          <p className="lede">
-            Push one $210 card payment through authorization, capture, settlement and post-settlement. Watch which
-            parties talk to each other, what status the transaction has, and where the money actually sits at each step.
-          </p>
-        )}
       </header>
       {tab === "lifecycle" && (
         <>
+          <section>
+            <div style={{ display: "grid", gap: 6 }}>
+              <span className="eyebrow">from tap to merchant</span>
+              <h2>The life of one card payment</h2>
+              <p className="lede">
+                Every card payment goes through authorization, capture, clearing and settlement, and may later be
+                refunded or disputed. Pick a scenario, then step through it: watch which parties talk to each other,
+                what status the payment has, and where the money sits at each step.
+              </p>
+            </div>
+          </section>
           <Simulator />
-          <RepoData />
           <Terms />
         </>
       )}
       {tab === "settlement" && <Settlement />}
       {tab === "payouts" && <Payouts />}
       {tab === "chargebacks" && <Chargebacks />}
+      {tab === "repo" && <RepoData />}
     </div>
   );
 }

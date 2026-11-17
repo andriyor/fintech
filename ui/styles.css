@@ -60,7 +60,6 @@ button.act { font: 500 14px var(--text); padding: 8px 12px; border-radius: 7px; 
 button.act.alt { background: transparent; color: var(--accent); }
 button.act:disabled { opacity: .45; cursor: default; }
 .path { font: 12px var(--mono); color: var(--muted); margin-top: 10px; overflow-wrap: anywhere; }
-label.src { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); }
 select { font: 13px var(--text); padding: 4px 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); }
 
 /* ledger */
