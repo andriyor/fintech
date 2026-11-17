@@ -46,7 +46,7 @@ Amount of money an individual or entity receives after all deductions, such as t
 
 ## Interactive UI
 
-`ui/` is a small app that explains the concepts above by simulation: payment lifecycle, fraud and risk scoring,
+`ui/` is a small app that explains the concepts above by simulation: payment lifecycle, tokenization, fraud and risk scoring,
 settlement, payouts, chargebacks and double-entry bookkeeping, a glossary of the terms they use, plus the aggregates computed from
 `transactions/`.
 
@@ -70,7 +70,7 @@ pnpm report  # PDF of the aggregates in transactions/ (page.pdf); needs `pnpm ex
 
 - **Vite + React, no router or UI kit.** Tabs are switched by URL hash (`#settlement`); styling is one CSS file
   with light/dark tokens. The app is a teaching tool, so fewer moving parts beat flexibility.
-- **One folder per tab.** Each of `ui/lifecycle`, `fraud`, `settlement`, `payouts`, `chargebacks`, `ledger` holds its
+- **One folder per tab.** Each of `ui/lifecycle`, `tokens`, `fraud`, `settlement`, `payouts`, `chargebacks`, `ledger` holds its
   model, tests and components; `ui/terms` is the glossary; `ui/shared` holds what several tabs use (`Actors`,
   `Toggle`, `MachineDiagram`, `money`, icons). The Repo data tab reuses the PDF report's types and
   aggregate from `report/` instead of copying them.

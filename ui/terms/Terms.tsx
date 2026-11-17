@@ -17,6 +17,14 @@ const GROUPS: [string, string, string, [string, string][]][] = [
     ["Void vs refund", "A void cancels before capture, so only a hold is released and no money moves. A refund happens after settlement and sends money back."],
     ["3-D Secure", "An extra check by the issuer for online payments, such as confirming in the bank's app. It shifts fraud liability from the merchant to the issuer."],
   ]],
+  ["Card data and tokens", "tokens", "tokens", [
+    ["PAN", "Primary account number: the real card number. Anyone holding it with the expiry can try to charge it."],
+    ["PCI DSS", "The card industry's security standard for anyone who stores, processes or transmits card numbers. The fewer systems see a PAN, the less of it applies (self-assessment questionnaires from SAQ A to SAQ D)."],
+    ["Card vault", "A tightly secured store, usually run by the processor, that keeps card numbers and hands out tokens instead."],
+    ["Processor token", "A random reference to a card in one processor's vault. Useless outside that processor and that merchant's account."],
+    ["Network token", "A stand-in card number issued by Visa or Mastercard, bound to a device or merchant and kept current when the card is reissued."],
+    ["Cryptogram", "A one-time code generated for each network-token payment, so a captured token can't be replayed."],
+  ]],
   ["Fraud and risk", "fraud", "fraud", [
     ["Risk score", "A number for how likely a payment is fraud, from signals such as velocity, location and address checks. Thresholds turn it into approve, challenge or decline."],
     ["Velocity check", "Counting attempts per card, device or email in a short window. Many fast attempts with small amounts suggest card testing."],

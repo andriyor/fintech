@@ -236,3 +236,21 @@ h2.with-icon svg { color: var(--accent); }
 .hist-axis span { position: absolute; transform: translateX(-50%); }
 .hist-axis span:first-child { transform: none; }
 input[type="range"] { display: block; width: 220px; accent-color: var(--accent); }
+
+/* tokenization */
+.systems { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.system { display: grid; gap: 6px; justify-items: center; align-content: start; text-align: center; min-width: 0; padding: 10px 8px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; font-weight: 500; transition: background .25s, border-color .25s, box-shadow .25s; }
+.system small { display: block; font-size: 11px; font-weight: 400; color: var(--muted); }
+.system svg { color: var(--muted); }
+.system.on { background: var(--accent-soft); }
+.system.pan { border-color: var(--bad); box-shadow: inset 0 0 0 1px var(--bad); }
+.system.pan svg { color: var(--bad); }
+.chip { display: inline-block; font: 600 10px/1.4 var(--mono); padding: 2px 7px; border-radius: 99px; white-space: nowrap; }
+.chip.pan { background: var(--bad-soft); color: var(--bad); }
+.chip.token { background: var(--ok-soft); color: var(--ok); }
+.chip.networkToken { background: var(--accent-soft); color: var(--accent); white-space: normal; }
+.chip.none { color: var(--idle); background: var(--idle-soft); }
+table.compare th[scope="row"] { font: 600 13px var(--text); text-transform: none; letter-spacing: 0; color: var(--fg); white-space: nowrap; }
+table.compare td, table.compare th { vertical-align: top; min-width: 180px; }
+table.compare [aria-current] { background: var(--accent-soft); }
+@media (max-width: 720px) { .systems { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
