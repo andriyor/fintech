@@ -1,4 +1,5 @@
 // Glossary for every tab. Each group links to the tab that simulates it.
+import { ArrowRight } from "lucide-react";
 import { TOPIC_ICONS } from "../shared/icons";
 
 // [title, icon topic, tab to link, terms]
@@ -222,8 +223,12 @@ export default function Terms() {
                 <Icon size={20} className="text-accent" />
                 {title}
               </h2>
-              <a href={`#${tab}`} className="note mt-0">
-                see it in action →
+              <a
+                href={`#${tab}`}
+                className="group ml-auto inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1 text-[13px] font-semibold text-accent no-underline transition-colors hover:bg-accent hover:text-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              >
+                See it in action
+                <ArrowRight size={14} aria-hidden className="transition-transform group-hover:translate-x-0.5" />
               </a>
             </div>
             <dl className="panel">
