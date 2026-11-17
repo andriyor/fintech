@@ -3,14 +3,16 @@ import Simulator from "./components/Simulator";
 import RepoData from "./components/RepoData";
 import Terms from "./components/Terms";
 import Payouts from "./components/Payouts";
+import Chargebacks from "./components/Chargebacks";
 
 const TABS = [
   ["lifecycle", "Payment lifecycle"],
   ["payouts", "Payouts"],
+  ["chargebacks", "Chargebacks"],
 ] as const;
 type Tab = (typeof TABS)[number][0];
 
-const fromHash = (): Tab => (location.hash === "#payouts" ? "payouts" : "lifecycle");
+const fromHash = (): Tab => TABS.find(([id]) => `#${id}` === location.hash)?.[0] ?? "lifecycle";
 
 export default function App() {
   const [tab, setTab] = useState<Tab>(fromHash);
@@ -37,15 +39,15 @@ export default function App() {
           </p>
         )}
       </header>
-      {tab === "lifecycle" ? (
+      {tab === "lifecycle" && (
         <>
           <Simulator />
           <RepoData />
           <Terms />
         </>
-      ) : (
-        <Payouts />
       )}
+      {tab === "payouts" && <Payouts />}
+      {tab === "chargebacks" && <Chargebacks />}
     </div>
   );
 }
