@@ -1,57 +1,49 @@
 import { useRef, useState, type CSSProperties } from "react";
+import { useMachine } from "@xstate/react";
 import { money } from "../shared/money";
-import {
-  CARD_FEE, DISPUTE_FEE, ORDER, PHASES, REASONS, STATUS_INFO, decide, ratioBand, stepsFrom,
-  type DisputeStatus, type Entry, type Hop,
-} from "./model";
+import type { Hop } from "../shared/parties";
 import Actors from "../shared/Actors";
+import { CARD_FEE, DISPUTE_FEE, ORDER, PHASES, REASONS, STATUS_INFO, ratioBand, type DisputeStatus } from "./model";
+import { EVENTS, LABELS, disputeMachine, hopsFor, wins, type UserEvent } from "./machine";
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 const toneOf = (c: string) => ({ "--c": `var(${c})`, "--cs": `var(${c}-soft)` }) as CSSProperties;
 const statusTone = (s: DisputeStatus) => toneOf(STATUS_INFO[s][0]);
-type Event = { day: number; status: DisputeStatus; label: string };
 
 function Dispute() {
-  const [reasonId, setReasonId] = useState(REASONS[0].id);
-  const [evidence, setEvidence] = useState<string[]>([]);
-  const [status, setStatus] = useState<DisputeStatus | null>(null);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [ledger, setLedger] = useState<Entry[]>([]);
+  const [snap, send] = useMachine(disputeMachine);
+  const { reasonId, evidence, entries: ledger, timeline: events } = snap.context;
+  const status = events.at(-1)?.status ?? null;
   const [hop, setHop] = useState<Hop | null>(null);
   const [busy, setBusy] = useState(false);
   const [peek, setPeek] = useState<DisputeStatus | null>(null);
   const runId = useRef(0);
 
   const reason = REASONS.find(r => r.id === reasonId)!;
-  const won = decide(reason, evidence);
-  const escalated = events.some(e => e.status === "PRE_ARBITRATION");
-  const steps = stepsFrom(status, won, escalated);
-  // The merchant can respond (and change evidence) in each cycle: first chargeback and pre-arbitration.
-  const evidenceLocked = status !== null && status !== "NEEDS_RESPONSE" && status !== "PRE_ARBITRATION";
+  const won = wins(snap.context);
+  // The machine only accepts evidence changes while the merchant can respond: before the dispute and in each cycle.
+  const evidenceLocked = !snap.can({ type: "TOGGLE_EVIDENCE", id: "" });
+  const steps = EVENTS.filter(type => snap.can({ type }));
 
-  async function run(i: number) {
+  async function run(type: UserEvent["type"]) {
     const id = ++runId.current;
-    const step = steps[i];
     setBusy(true); setPeek(null);
     const delay = matchMedia("(prefers-reduced-motion: reduce)").matches ? 150 : 1100;
-    for (const x of step.hops) {
+    for (const x of hopsFor(type, snap.context)) {
       setHop(x);
       await sleep(delay);
       if (runId.current !== id) return;
     }
-    const entries = typeof step.entries === "function" ? step.entries(won) : step.entries;
-    setLedger(l => [...l, ...entries]);
-    setEvents(ev => [...ev, { day: step.day, status: step.to, label: step.label }]);
-    setStatus(step.to);
+    send({ type });
     setBusy(false);
   }
 
   function reset() {
     runId.current++;
-    setStatus(null); setEvents([]); setLedger([]); setHop(null); setBusy(false); setPeek(null);
+    send({ type: "RESET" });
+    setHop(null); setBusy(false); setPeek(null);
   }
 
-  const toggle = (e: string) => setEvidence(ev => (ev.includes(e) ? ev.filter(x => x !== e) : [...ev, e]));
   const total = ledger.reduce((a, e) => a + e.amount, 0);
   const shown = peek ?? status;
   const day = events.length ? events[events.length - 1].day : null;
@@ -60,7 +52,7 @@ function Dispute() {
     <section>
       <div className="panel controls" style={{ alignItems: "end" }}>
         <label htmlFor="reason">Dispute reason
-          <select id="reason" value={reasonId} disabled={!!status || busy} onChange={e => { setReasonId(e.target.value); setEvidence([]); }}>
+          <select id="reason" value={reasonId} disabled={!!status || busy} onChange={e => send({ type: "SET_REASON", reasonId: e.target.value })}>
             {REASONS.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
           </select>
         </label>
@@ -93,8 +85,8 @@ function Dispute() {
               : <p className="lede">No dispute yet. Pick a reason, then let the customer dispute the charge.</p>}
           </div>
           <div className="actions">
-            {steps.map((s, i) => (
-              <button key={s.label} className={"act" + (i ? " alt" : "")} disabled={busy} onClick={() => run(i)}>{s.label}</button>
+            {steps.map((type, i) => (
+              <button key={type} className={"act" + (i ? " alt" : "")} disabled={busy} onClick={() => run(type)}>{LABELS[type]}</button>
             ))}
             {(status || busy) && <button className="act alt" onClick={reset}>Start over</button>}
           </div>
@@ -104,7 +96,7 @@ function Dispute() {
                 <li key={i}><span className="mono">day {e.day}</span><span className="badge" style={statusTone(e.status)}>{e.status}</span><span>{e.label}</span></li>
               ))}
               {status === "NEEDS_RESPONSE" && <li className="due"><span className="mono">day 7</span><span>Response deadline</span></li>}
-              {steps.length === 0 && <li><span className="mono">final</span><span>Case closed{day !== null ? ` after ${day} days` : ""}.</span></li>}
+              {snap.hasTag("final") && <li><span className="mono">final</span><span>Case closed{day !== null ? ` after ${day} days` : ""}.</span></li>}
             </ol>
           )}
         </div>
@@ -115,7 +107,7 @@ function Dispute() {
             <div className="evidence">
               {reason.evidence.map(e => (
                 <label key={e.id} htmlFor={`ev-${e.id}`}>
-                  <input id={`ev-${e.id}`} type="checkbox" checked={evidence.includes(e.id)} disabled={evidenceLocked || busy} onChange={() => toggle(e.id)} />
+                  <input id={`ev-${e.id}`} type="checkbox" checked={evidence.includes(e.id)} disabled={evidenceLocked || busy} onChange={() => send({ type: "TOGGLE_EVIDENCE", id: e.id })} />
                   {e.label}
                 </label>
               ))}

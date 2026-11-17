@@ -1,5 +1,4 @@
-import type { Hop } from "../shared/parties.ts";
-// Chargeback (dispute) model. Pure data and functions, so chargebacks.check.ts runs under plain Node.
+// Chargeback (dispute) data: reason codes, evidence, fees and status descriptions. The flow itself is in machine.ts.
 // Simplified and illustrative: real reason codes, deadlines and fees vary by network and processor.
 
 export type DisputeStatus = "NEEDS_RESPONSE" | "UNDER_REVIEW" | "WON" | "LOST" | "PRE_ARBITRATION" | "ARBITRATION";
@@ -75,96 +74,6 @@ export const decide = (reason: Reason, submitted: string[]) =>
 export const DAYS = { respondBy: 7, issuerDecision: 45, preArb: 75, arbitration: 135 };
 
 export type Entry = { label: string; amount: number };
-export type Step = {
-  label: string; to: DisputeStatus; day: number; hops: Hop[];
-  entries: Entry[] | ((won: boolean) => Entry[]);
-  decides?: boolean; // the outcome depends on the evidence
-};
-
-const h = (route: string, text: string): Hop => ({ route, text });
-
-/** Actions from each status. Outcome-dependent steps resolve `to` and entries with `won`. */
-export function stepsFrom(status: DisputeStatus | null, won: boolean, escalated: boolean): Step[] {
-  switch (status) {
-    case null:
-      return [{
-        label: "Customer disputes the charge", to: "NEEDS_RESPONSE", day: 0,
-        entries: [{ label: "Chargeback debit", amount: -ORDER }, { label: "Dispute fee", amount: -DISPUTE_FEE }],
-        hops: [
-          h("customer→issuer", "Cardholder calls their bank and disputes the $120 charge."),
-          h("issuer→network", "Issuer picks a reason code and files the chargeback with the card network."),
-          h("network→acquirer", "Network moves the $120 back from the merchant's acquirer to the issuer immediately."),
-          h("acquirer→processor", "Acquirer passes the debit and the dispute details to the processor."),
-          h("processor→merchant", "Processor takes $120 + $15 fee from the merchant balance and opens a case: respond within 7 days."),
-        ],
-      }];
-    case "NEEDS_RESPONSE":
-      return [
-        {
-          label: "Submit evidence", to: "UNDER_REVIEW", day: 5, entries: [],
-          hops: [
-            h("merchant→processor", "Merchant uploads evidence and a short rebuttal letter."),
-            h("processor→acquirer", "Processor packages it as a representment."),
-            h("acquirer→network", "Acquirer submits it through the network."),
-            h("network→issuer", "Issuer reviews the evidence against the reason code rules."),
-          ],
-        },
-        {
-          label: "Accept the dispute", to: "LOST", day: 2, entries: [],
-          hops: [h("merchant→processor", "Merchant accepts. The cardholder keeps the money and the case closes.")],
-        },
-        {
-          label: "Miss the deadline", to: "LOST", day: DAYS.respondBy, entries: [],
-          hops: [h("processor→merchant", "No response by day 7. The dispute is lost automatically.")],
-        },
-      ];
-    case "UNDER_REVIEW":
-      return [{
-        label: "Issuer decides", to: won ? "WON" : "LOST", day: DAYS.issuerDecision, decides: true,
-        entries: won => (won ? [{ label: "Chargeback reversed", amount: ORDER }] : []),
-        hops: [
-          h("issuer→network", "Issuer rules on the evidence, which can take weeks."),
-          h("network→acquirer", "The decision flows back through the network."),
-          h("processor→merchant", won ? "Won: the $120 comes back. The $15 fee usually doesn't." : "Lost: the cardholder keeps the $120."),
-        ],
-      }];
-    case "WON":
-      return escalated ? [] : [{
-        label: "Issuer files pre-arbitration", to: "PRE_ARBITRATION", day: DAYS.preArb,
-        entries: [{ label: "Pre-arbitration debit", amount: -ORDER }],
-        hops: [
-          h("customer→issuer", "Cardholder sends new information and the issuer disagrees with the merchant's evidence."),
-          h("issuer→acquirer", "Issuer files pre-arbitration: a second cycle. Funds are pulled back again."),
-          h("processor→merchant", "Merchant must accept or escalate to the card network."),
-        ],
-      }];
-    case "PRE_ARBITRATION":
-      return [
-        {
-          label: "Escalate to network arbitration", to: "ARBITRATION", day: DAYS.preArb + 10, entries: [],
-          hops: [
-            h("merchant→processor", "Merchant decides to fight on, risking the arbitration fee."),
-            h("acquirer→network", "Acquirer asks the card network to rule. The network's decision is final."),
-          ],
-        },
-        {
-          label: "Accept", to: "LOST", day: DAYS.preArb + 5, entries: [],
-          hops: [h("merchant→processor", "Merchant accepts the pre-arbitration. The cardholder keeps the money.")],
-        },
-      ];
-    case "ARBITRATION":
-      return [{
-        label: "Network rules", to: won ? "WON" : "LOST", day: DAYS.arbitration, decides: true,
-        entries: won => (won ? [{ label: "Arbitration won, funds returned", amount: ORDER }] : [{ label: "Arbitration fee (loser pays)", amount: -ARBITRATION_FEE }]),
-        hops: [
-          h("network→issuer", "Network reviews both sides under its rules."),
-          h("network→merchant", won ? "Network rules for the merchant. The issuer pays the arbitration fee." : "Network rules for the cardholder. The merchant pays a $500 arbitration fee."),
-        ],
-      }];
-    default:
-      return [];
-  }
-}
 
 export const STATUS_INFO: Record<DisputeStatus, [string, string]> = {
   NEEDS_RESPONSE: ["--hold", "Money and fee already taken. The clock is running: respond before the processor's deadline (often 7–21 days)."],

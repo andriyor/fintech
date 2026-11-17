@@ -1,6 +1,9 @@
-// Self-check for the chargeback model: `pnpm check`.
+// Self-check for the chargeback model and machine: `pnpm check`.
+// Explores every path for winning and losing evidence: reachability, dead ends and the merchant's final cost.
 import assert from "node:assert/strict";
-import { ARBITRATION_FEE, DISPUTE_FEE, ORDER, REASONS, decide, ratioBand, stepsFrom, type DisputeStatus } from "./model.ts";
+import { createActor } from "xstate";
+import { EVENTS, disputeMachine, type UserEvent } from "./machine.ts";
+import { ARBITRATION_FEE, DISPUTE_FEE, ORDER, PHASES, REASONS, decide, ratioBand } from "./model.ts";
 
 const fraud = REASONS.find(r => r.id === "fraud")!;
 assert.equal(decide(fraud, ["3ds"]), true, "3-D Secure alone wins fraud");
@@ -11,37 +14,54 @@ assert.equal(decide(fraud, ["avs", "history", "chat"]), true);
 for (const r of REASONS) for (const set of r.winsWith) for (const id of set)
   assert.ok(r.evidence.some(e => e.id === id), `${r.id}: ${id} is selectable`);
 
-// Walk a path, summing ledger entries, and check the merchant's final cost.
-function walk(won: boolean, labels: string[]) {
-  let status: DisputeStatus | null = null, total = 0, escalated = false;
-  for (const label of labels) {
-    const step = stepsFrom(status, won, escalated).find(s => s.label === label);
-    assert.ok(step, `step "${label}" exists from ${status}`);
-    const entries = typeof step.entries === "function" ? step.entries(won) : step.entries;
-    total += entries.reduce((a, e) => a + e.amount, 0);
-    if (step.to === "PRE_ARBITRATION") escalated = true;
-    status = step.to;
+function play(evidence: string[], path: UserEvent["type"][]) {
+  const actor = createActor(disputeMachine).start();
+  actor.send({ type: "SET_REASON", reasonId: "fraud" });
+  for (const id of evidence) actor.send({ type: "TOGGLE_EVIDENCE", id });
+  for (const type of path) {
+    assert.ok(actor.getSnapshot().can({ type }), `${type} allowed after ${path}`);
+    actor.send({ type });
   }
-  return { status, total };
+  const snap = actor.getSnapshot();
+  return { snap, cost: snap.context.entries.reduce((a, e) => a + e.amount, 0), status: snap.context.timeline.at(-1)?.status };
 }
-assert.deepEqual(walk(false, ["Customer disputes the charge", "Accept the dispute"]), { status: "LOST", total: -ORDER - DISPUTE_FEE });
-assert.deepEqual(walk(true, ["Customer disputes the charge", "Submit evidence", "Issuer decides"]), { status: "WON", total: -DISPUTE_FEE });
-assert.deepEqual(
-  walk(false, ["Customer disputes the charge", "Submit evidence", "Issuer decides"]),
-  { status: "LOST", total: -ORDER - DISPUTE_FEE },
-);
-// Won first cycle, then pre-arb and arbitration: the evidence outcome stays the same in both cycles.
-assert.deepEqual(
-  walk(true, ["Customer disputes the charge", "Submit evidence", "Issuer decides", "Issuer files pre-arbitration", "Escalate to network arbitration", "Network rules"]),
-  { status: "WON", total: -DISPUTE_FEE },
-);
-// Lost arbitration (evidence changed between cycles is not modelled; outcome follows the evidence).
-assert.equal(
-  walk(false, ["Customer disputes the charge", "Submit evidence", "Issuer decides"]).status, "LOST",
-  "weak evidence loses the first cycle, so no second cycle",
-);
-assert.equal(stepsFrom("WON", true, true).length, 0, "after arbitration a win is final");
-assert.ok(ARBITRATION_FEE > ORDER);
+
+const seen = new Set<string>();
+const ends = new Map<string, number>(); // path → merchant cost at a terminal state
+for (const evidence of [["3ds"], []]) {
+  const queue: UserEvent["type"][][] = [[]];
+  while (queue.length) {
+    const path = queue.shift()!;
+    const { snap, cost, status } = play(evidence, path);
+    if (status) seen.add(status);
+    const next = EVENTS.filter(type => snap.can({ type }));
+    assert.equal(next.length === 0, snap.hasTag("final"), `${snap.value}: only final states are dead ends`);
+    if (!next.length) ends.set(`${evidence}:${path}`, cost);
+    for (const type of next) queue.push([...path, type]);
+  }
+}
+assert.deepEqual([...seen].sort(), PHASES.flatMap(([, s]) => s).sort(), "every status is reachable");
+
+const cost = (evidence: string[], path: UserEvent["type"][]) => play(evidence, path).cost;
+assert.equal(cost([], ["DISPUTE", "ACCEPT"]), -ORDER - DISPUTE_FEE);
+assert.equal(cost(["3ds"], ["DISPUTE", "SUBMIT", "ISSUER_DECIDES"]), -DISPUTE_FEE, "a win returns the order but not the fee");
+assert.equal(play([], ["DISPUTE", "SUBMIT", "ISSUER_DECIDES"]).status, "LOST", "weak evidence loses the first cycle");
+assert.ok(!play([], ["DISPUTE", "SUBMIT", "ISSUER_DECIDES"]).snap.can({ type: "PRE_ARB" }), "no second cycle after a loss");
+assert.equal(cost(["3ds"], ["DISPUTE", "SUBMIT", "ISSUER_DECIDES", "PRE_ARB", "ESCALATE", "NETWORK_RULES"]), -DISPUTE_FEE);
+for (const [path, c] of ends) assert.ok(c >= -ORDER - DISPUTE_FEE - ARBITRATION_FEE, `${path} costs at most order + both fees`);
+
+// Removing the winning evidence during pre-arbitration loses arbitration and costs the fee.
+const actor = createActor(disputeMachine).start();
+actor.send({ type: "TOGGLE_EVIDENCE", id: "3ds" });
+for (const type of ["DISPUTE", "SUBMIT", "ISSUER_DECIDES", "PRE_ARB"] as const) actor.send({ type });
+actor.send({ type: "TOGGLE_EVIDENCE", id: "3ds" });
+actor.send({ type: "ESCALATE" });
+assert.ok(!actor.getSnapshot().can({ type: "TOGGLE_EVIDENCE", id: "3ds" }), "evidence is locked during arbitration");
+actor.send({ type: "NETWORK_RULES" });
+assert.equal(actor.getSnapshot().context.entries.reduce((a, e) => a + e.amount, 0), -ORDER - DISPUTE_FEE - ARBITRATION_FEE);
+actor.send({ type: "RESET" });
+assert.equal(actor.getSnapshot().value, "START");
+assert.deepEqual(actor.getSnapshot().context.entries, []);
 
 assert.equal(ratioBand(0.002)[0], "--ok");
 assert.equal(ratioBand(0.02)[0], "--bad");
